@@ -7,6 +7,7 @@ def get_player_stats(username, headers):
         return response.json()
     return response.status_code
 
+
 def get_country_players(country_code, headers):
     '''
     country_code uses iso 3166 country codes
@@ -19,12 +20,14 @@ def get_country_players(country_code, headers):
         return response.json()['players']
     return []
 
+
 def get_player_games(username, YYYY, MM, headers):
     url = f"https://api.chess.com/pub/player/{username}/games/{YYYY}/{MM}"
     response = requests.get(url,headers=headers)
     if response.status_code == 200:
         return response.json()['games']
     return []
+
 
 def get_titled_player_usernames(title_abbrev, headers):
     '''

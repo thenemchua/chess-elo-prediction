@@ -1,11 +1,27 @@
-from collections import defaultdict
-import csv
-import ijson
-import json
 import os
+
+import multiprocessing
+
+import csv
+import json
+import ijson
+
+from collections import defaultdict
+
 import pandas as pd
+import numpy as np
+
+def create_game_dict():
+    '''
+    Crée le format de data qu'on veut exploiter
+    '''
+    return {'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]}
+
 
 def create_games_dict():
+    '''
+    Crée un dictionnaire vide de données par mode de jeu
+    '''
     games = {
         'bullet':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]},
         'blitz':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]},
@@ -14,6 +30,7 @@ def create_games_dict():
     }
     
     return games
+
 
 def fill_games_dict(game_list, games):
     '''
@@ -38,6 +55,7 @@ def fill_games_dict(game_list, games):
             games[game['time_class']]['black_result'].append(game['black']['result'])
             games[game['time_class']]['opening'].append(game['eco'])
 
+
 def save_list_to_csv(filename, l):
     '''
     filename is the path of the file
@@ -48,6 +66,7 @@ def save_list_to_csv(filename, l):
         for e in l:
             writer.writerow([e])
     print(f'file saved to {filename}')
+
 
 def read_csv_to_list(filename):
     '''
@@ -64,6 +83,7 @@ def read_csv_to_list(filename):
     
     return res
 
+
 def save_dict_to_json(filename, d):
     '''
     filename is the path of the file
@@ -72,6 +92,7 @@ def save_dict_to_json(filename, d):
     with open(filename, mode='w') as file:
         json.dump(d, file)
     print(f'file saved to {filename}')
+
 
 def read_json_to_dict(filename):
     '''
@@ -84,6 +105,7 @@ def read_json_to_dict(filename):
     print(f'file loaded from {filename}')
     
     return res
+
 
 def combine_games_to_dataframes(data_folder, file_prefix):
     """
@@ -127,6 +149,7 @@ def combine_games_to_dataframes(data_folder, file_prefix):
     
     return dataframes
 
+
 def process_files_in_batches(data_folder, file_prefix, batch_size=10):
     files = [f for f in os.listdir(data_folder) if f.startswith(file_prefix) and f.endswith(".json")]
     
@@ -149,8 +172,6 @@ def process_files_in_batches(data_folder, file_prefix, batch_size=10):
     return batch_data
     print("Traitement terminé.")
 
-def process_dataframe(df):
-    print(f"Traitement d'un batch de taille : {len(df)}")
 
 def split_json_by_mode(input_file, output_dir, max_size_gb=0, num_parts=5):
     """
@@ -211,6 +232,7 @@ def split_json_by_mode(input_file, output_dir, max_size_gb=0, num_parts=5):
         os.remove(input_file)
     else:
         print(f"Le fichier {input_file} fait {file_size_gb:.2f} Go et ne nécessite pas de segmentation.")
+
 
 def split_large_json_stream(input_file, output_dir, max_size_gb=0, num_parts=5):
     """
@@ -273,6 +295,7 @@ def split_large_json_stream(input_file, output_dir, max_size_gb=0, num_parts=5):
     else:
         print(f"Le fichier {input_file} fait {file_size_gb:.2f} Go et ne nécessite pas de segmentation.")
 
+
 def verify_segmentation(input_file, output_dir, base_filename):
     """
     Vérifie que la segmentation d'un fichier JSON volumineux s'est déroulée correctement.
@@ -319,9 +342,10 @@ def verify_segmentation(input_file, output_dir, base_filename):
     print("Vérification terminée : aucune perte ou différence détectée.")
     return True
 
-def create_json_by_elo(input_dir, output_dir, modes=['blitz', 'bullet', 'rapid', 'daily'], elo_bucket_size=100, full_limit=50000, medium_limit=10000, small_limit=2000):
+
+def create_json_by_elo(input_dir, output_dir, modes=['blitz', 'bullet', 'rapid', 'daily'], elo_bucket_size=100, full_limit=500):
     """
-    Crée des JSON organisés par tranche d'Elo pour différentes tailles.
+    Crée des JSON organisés par tranche d'Elo sans doublons.
 
     Args:
         input_dir (str): Répertoire contenant les fichiers segmentés.
@@ -329,8 +353,6 @@ def create_json_by_elo(input_dir, output_dir, modes=['blitz', 'bullet', 'rapid',
         modes (list): Liste des modes à traiter (ex: ['bullet', 'blitz']).
         elo_bucket_size (int): Taille des tranches d'Elo (par défaut 100).
         full_limit (int): Nombre max de parties par tranche pour le JSON 'full'.
-        medium_limit (int): Nombre max de parties par tranche pour le JSON 'medium'.
-        small_limit (int): Nombre max de parties par tranche pour le JSON 'small'.
     """
     os.makedirs(output_dir, exist_ok=True)
 
@@ -341,8 +363,12 @@ def create_json_by_elo(input_dir, output_dir, modes=['blitz', 'bullet', 'rapid',
             print(f"Erreur : le dossier pour le mode {mode} n'existe pas.")
             continue
 
-        # Tranches d'Elo
-        elo_ranges = defaultdict(list)
+        # Tranches d'Elo et ensemble pour suivre les doublons
+        elo_ranges = defaultdict(int)
+        seen_games = set()
+        
+        # Crée la structure du json final
+        full_data = create_game_dict()
 
         # Parcourir les fichiers du mode
         for file in sorted(os.listdir(mode_dir)):
@@ -352,41 +378,78 @@ def create_json_by_elo(input_dir, output_dir, modes=['blitz', 'bullet', 'rapid',
             file_path = os.path.join(mode_dir, file)
             with open(file_path, 'r') as f:
                 data = json.load(f)
-                games = data[mode]
+                games = data.get(mode, {})
 
                 # Trier les parties dans les tranches d'Elo
-                for i, white_rating in enumerate(games['white_rating']):
-                    black_rating = games['black_rating'][i]
-                    pgn = games['pgn'][i]
-                    fen = games['fen'][i]
-                    white_result = games['white_result'][i]
-                    black_result = games['black_result'][i]
-                    opening = games['opening'][i]
-
+                for i, white_rating in enumerate(games.get('white_rating', [])):
+                    black_rating = games.get('black_rating', [])[i]
+                    
+                    # On ne garde que les parties avec des classements serrés
+                    if np.abs(white_rating - black_rating) > 300:
+                        continue
+                    
                     # Prendre la moyenne des Elo des deux joueurs pour classer
                     avg_elo = (white_rating + black_rating) // 2
                     elo_key = (avg_elo // elo_bucket_size) * elo_bucket_size
 
-                    elo_ranges[elo_key].append({
-                        'fen': fen,
-                        'pgn': pgn,
-                        'white_rating': white_rating,
-                        'black_rating': black_rating,
-                        'white_result': white_result,
-                        'black_result': black_result,
-                        'opening': opening,
-                    })
+                    # Générer une clé unique pour la partie
+                    game_key = (
+                        games.get('pgn', [])[i],
+                        games.get('fen', [])[i],
+                        white_rating,
+                        black_rating
+                    )
 
-        # Construire les JSON pour chaque taille
-        for size, limit in [('full', full_limit), ('medium', medium_limit), ('small', small_limit)]:
-            output_path = os.path.join(output_dir, f"{mode}_{size}.json")
-            selected_games = defaultdict(list)
+                    # Vérifier les doublons
+                    if game_key in seen_games or elo_ranges[elo_key] >= full_limit:
+                        continue
 
-            # Limiter le nombre de parties par tranche
-            for elo_key, games in sorted(elo_ranges.items()):
-                selected_games[elo_key].extend(games[:limit])
+                    # Ajouter la partie aux données finales
+                    pgn = games.get('pgn', [])[i]
+                    fen = games.get('fen', [])[i]
+                    white_result = games.get('white_result', [])[i]
+                    black_result = games.get('black_result', [])[i]
+                    opening = games.get('opening', [])[i]
 
-            # Sauvegarder le JSON
-            with open(output_path, 'w') as out_f:
-                json.dump(selected_games, out_f)
-            print(f"{size.capitalize()} JSON sauvegardé pour {mode} : {output_path}")
+                    full_data['fen'].append(fen)
+                    full_data['pgn'].append(pgn)
+                    full_data['white_rating'].append(white_rating)
+                    full_data['black_rating'].append(black_rating)
+                    full_data['white_result'].append(white_result)
+                    full_data['black_result'].append(black_result)
+                    full_data['opening'].append(opening)
+
+                    # Ajouter la clé au set et incrémenter le compteur
+                    seen_games.add(game_key)
+                    elo_ranges[elo_key] += 1
+
+        output_path = os.path.join(output_dir, f"{mode}_{full_limit}.json")
+
+        # Sauvegarder le JSON
+        with open(output_path, 'w') as out_f:
+            json.dump(full_data, out_f)
+        print(f"full JSON sauvegardé pour {mode} : {output_path}")
+        
+
+def get_optimal_workers(worker_ratio=0.75):
+    """
+    Calcule le nombre optimal de workers pour multiprocessing.Pool.
+    
+    Args:
+        worker_ratio (float): Proportion des cœurs CPU à utiliser (entre 0 et 1).
+                              Par défaut, utilise 75% des cœurs disponibles.
+    
+    Returns:
+        int: Nombre optimal de workers.
+    """
+    try:
+        # Obtenir le nombre de cœurs disponibles
+        total_cores = multiprocessing.cpu_count()
+        
+        # Calculer le nombre de workers en fonction du ratio
+        workers = max(1, int(total_cores * worker_ratio))
+        
+        return workers
+    except Exception as e:
+        print(f"Erreur lors du calcul des workers : {e}")
+        return 1  # Valeur par défaut en cas d'erreur
