@@ -1,4 +1,5 @@
-# Exclure les fichiers JSON de plus de 100 Mo
 *.json
 data/
 stockfish/
+*.ipynb
+notebooks/
