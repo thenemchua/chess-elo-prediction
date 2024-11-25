@@ -3,3 +3,4 @@ data/
 stockfish/
 *.ipynb
 notebooks/
+.DS_Store
