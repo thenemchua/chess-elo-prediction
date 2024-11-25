@@ -6,6 +6,7 @@ import chess.engine
 import chess.pgn
 
 import pandas as pd
+from Utils import utils
 
 from multiprocessing import Pool
 from functools import partial
@@ -65,7 +66,7 @@ def analyze_pgn(pgn_string, stockfish_path='./stockfish/stockfish-ubuntu-x86-64-
     return {"evaluation": evaluations, "best_move": best_moves, "mate": mates}
 
 
-def process_with_stockfish(df, stockfish_path='./stockfish/stockfish-ubuntu-x86-64-avx2', depth=15, output_path="evaluated_games.json"):
+def process_with_stockfish(df, filename, stockfish_path='./stockfish/stockfish-ubuntu-x86-64-avx2', depth=15, output_path="evaluated_games.json"):
     """
     Enrichit un DataFrame en ajoutant des colonnes d'évaluation et de meilleur coup Stockfish,
     et sauvegarde le résultat dans un fichier JSON.
@@ -80,10 +81,20 @@ def process_with_stockfish(df, stockfish_path='./stockfish/stockfish-ubuntu-x86-
         pd.DataFrame: DataFrame enrichi avec les colonnes d'évaluation, de meilleur coup et de mate s'il y en a un.
     """
     evaluations = []
+    total_rows = df.shape[0]
+    
     for index, pgn in enumerate(df['pgn']):
         try:
             eval_result = analyze_pgn(pgn, stockfish_path, depth=depth)
             evaluations.append(eval_result)
+            
+            # Display progression
+            progression = index / total_rows
+            completed_length = int(40 * progression)
+            bar = '=' * completed_length + '-' * (40 - completed_length)
+            percentage = round(progression * 100, 2)
+            print(f"{filename}: Partie {index}/{total_rows} évaluée - Progression: [{bar}] {index}/{total_rows} - {percentage}%")
+            # utils.display_progression_bar(filename, index, total_rows)
         except Exception as e:
             print(f"Erreur lors de l'analyse du PGN à l'index {index}: {e}")
             evaluations.append({"evaluation": None, "best_move": None, "mate": None})
@@ -96,6 +107,9 @@ def process_with_stockfish(df, stockfish_path='./stockfish/stockfish-ubuntu-x86-
     # Sauvegarder en JSON
     df.to_json(output_path)
     print(f"Fichier évalué sauvegardé dans : {output_path}")
+    
+    # Supprime le fichier d'origine
+    os.remove(filename)
     
     return df
 
@@ -113,7 +127,7 @@ def evaluate_single_file(input_path, output_dir, stockfish_path='./stockfish/sto
         df = pd.read_json(input_path)
         
         # Traiter les données avec Stockfish
-        process_with_stockfish(df, stockfish_path, depth, output_path)
+        process_with_stockfish(df, input_path, stockfish_path, depth, output_path)
     except Exception as e:
         print(f"Erreur lors du traitement de {input_path}: {e}")
 
@@ -138,7 +152,7 @@ def evaluate_games_in_directory(input_dir, output_dir, stockfish_path='./stockfi
         for f in os.listdir(input_dir)
         if f.endswith(".json")
     ]
-    files = sorted(files, key=lambda x: os.path.getsize(x))  # Trier par taille
+    files = sorted(files, key=lambda x: os.path.getsize(x), reverse=True)  # Trier par taille
     
     # Parallélisation avec Pool
     with Pool(processes=workers) as pool:

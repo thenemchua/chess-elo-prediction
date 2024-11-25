@@ -1,4 +1,5 @@
 import os
+import sys
 
 import multiprocessing
 
@@ -7,6 +8,7 @@ import json
 import ijson
 
 from collections import defaultdict
+import re
 
 import pandas as pd
 import numpy as np
@@ -237,6 +239,13 @@ def split_json_by_mode(input_file, output_dir, max_size_gb=0, num_parts=5):
 def split_large_json_stream(input_file, output_dir, max_size_gb=0, num_parts=5):
     """
     Segmente un fichier JSON volumineux structuré par mode de jeu sans le charger complètement en mémoire.
+    Les fichiers JSON sont de la forme :
+    {
+        'bullet':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]},
+        'blitz':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]},
+        'rapid':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]},
+        'daily':{'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]}
+    }
     
     Args:
         input_file (str): Chemin vers le fichier JSON à segmenter.
@@ -296,6 +305,59 @@ def split_large_json_stream(input_file, output_dir, max_size_gb=0, num_parts=5):
         print(f"Le fichier {input_file} fait {file_size_gb:.2f} Go et ne nécessite pas de segmentation.")
 
 
+def split_json_file_single_mode(input_file, output_dir, num_parts=5):
+    """
+    Segmente un fichier JSON en plusieurs parties sans le charger entièrement en mémoire.
+    
+    Args:
+        input_file (str): Chemin vers le fichier JSON à segmenter.
+        output_dir (str): Répertoire où sauvegarder les fichiers segmentés.
+        num_parts (int): Nombre de segments à créer.
+        
+    Returns:
+        None
+    """
+    # Charger le fichier JSON
+    print(f"Chargement du fichier {input_file}...")
+    with open(input_file, 'r') as f:
+        data = json.load(f)
+    
+    # Vérification de la structure attendue
+    if not isinstance(data, dict) or 'fen' not in data:
+        raise ValueError("Le fichier JSON doit contenir une structure de type {'fen':[], ...}")
+    
+    # Calculer le nombre total d'entrées
+    total_entries = len(data['fen'])
+    print(f"Nombre total d'entrées : {total_entries}")
+    if total_entries == 0:
+        raise ValueError("Le fichier JSON ne contient aucune entrée à segmenter.")
+    
+    # Calculer la taille de chaque segment
+    chunk_size = total_entries // num_parts
+    print(f"Taille de chaque segment : {chunk_size}")
+    
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for i in range(num_parts):
+        start_idx = i * chunk_size
+        end_idx = (i + 1) * chunk_size if i < num_parts - 1 else total_entries
+        
+        # Créer un segment pour ce fichier
+        chunk = {key: value[start_idx:end_idx] for key, value in data.items()}
+        
+        # Sauvegarder le segment dans un fichier JSON
+        output_file = os.path.join(
+            output_dir,
+            f"{os.path.basename(input_file).split('.')[0]}_part_{i+1}.json"
+        )
+        with open(output_file, 'w') as out_f:
+            json.dump(chunk, out_f, indent=4)
+        
+        print(f"Segment {i+1} sauvegardé dans {output_file}.")
+
+
+
 def verify_segmentation(input_file, output_dir, base_filename):
     """
     Vérifie que la segmentation d'un fichier JSON volumineux s'est déroulée correctement.
@@ -337,6 +399,53 @@ def verify_segmentation(input_file, output_dir, base_filename):
         # Comparer le total
         if original_counts[mode] != segmented_counts[mode]:
             print(f"Erreur : Discrepance pour le mode {mode} (original: {original_counts[mode]}, segmenté: {segmented_counts[mode]}).")
+            return False
+
+    print("Vérification terminée : aucune perte ou différence détectée.")
+    return True
+
+
+def verify_segmentation_single_mode(input_file, output_dir, base_filename):
+    """
+    Vérifie que la segmentation d'un fichier JSON volumineux s'est déroulée correctement
+    pour le nouveau format de données.
+    
+    Args:
+        input_file (str): Chemin vers le fichier JSON d'origine.
+        output_dir (str): Répertoire contenant les fichiers segmentés.
+        base_filename (str): Nom de base à rechercher dans les fichiers segmentés.
+
+    Returns:
+        bool: True si tout est correct, False en cas de problème.
+    """
+    print("Début de la vérification de la segmentation...")
+
+    # Étape 1 : Compter le nombre d'éléments dans chaque clé du fichier original
+    original_counts = {}
+    with open(input_file, 'r') as f:
+        original_data = json.load(f)
+        for key in original_data.keys():
+            original_counts[key] = len(original_data[key])
+            print(f"Clé '{key}': {original_counts[key]} éléments dans le fichier original.")
+
+    # Étape 2 : Vérifier les segments
+    segmented_counts = {key: 0 for key in original_counts.keys()}
+    for file in sorted(os.listdir(output_dir)):
+        if file.endswith('.json') and base_filename in file:
+            segment_path = os.path.join(output_dir, file)
+            with open(segment_path, 'r') as f:
+                segment_data = json.load(f)
+                for key in segment_data.keys():
+                    segmented_counts[key] += len(segment_data[key])
+    
+    for key in original_counts.keys():
+        print(f"Clé '{key}': {segmented_counts[key]} éléments dans les segments.")
+
+    # Étape 3 : Comparer les totaux
+    for key in original_counts.keys():
+        if original_counts[key] != segmented_counts[key]:
+            print(f"Erreur : Discrepance pour la clé '{key}' "
+                  f"(original: {original_counts[key]}, segmenté: {segmented_counts[key]}).")
             return False
 
     print("Vérification terminée : aucune perte ou différence détectée.")
@@ -453,3 +562,53 @@ def get_optimal_workers(worker_ratio=0.75):
     except Exception as e:
         print(f"Erreur lors du calcul des workers : {e}")
         return 1  # Valeur par défaut en cas d'erreur
+
+
+def display_progression_bar(filename, index, total_rows, bar_length=40):
+    progression = index / total_rows
+    completed_length = int(bar_length * progression)
+    bar = '=' * completed_length + '-' * (bar_length - completed_length)
+    percentage = round(progression * 100, 2)
+    sys.stdout.write(f"\r{filename}: [{bar}] {index}/{total_rows} - {percentage}%")
+    sys.stdout.flush()
+    
+
+def parse_pgn_with_time(pgn):
+    # Expression régulière pour capturer les temps {[%clk X:XX:XX.X]}
+    time_pattern = r"\{\[%clk ([0-9:.]+)\]\}"
+    # Expression régulière pour capturer les coups en supprimant les temps
+    move_pattern = r"([0-9]+\.\s+\S+|\.\.\.\s+\S+)"
+
+    # Extraire les temps
+    times = re.findall(time_pattern, pgn)
+
+    # Supprimer les temps du PGN
+    clean_pgn = re.sub(time_pattern, '', pgn).strip()
+
+    # Extraire uniquement les coups
+    moves = re.findall(move_pattern, clean_pgn)
+    moves = [move.split()[-1] for move in moves]  # On garde uniquement le coup, pas le numéro.
+
+    # Construire un DataFrame
+    data = {
+        "Move Number": [i // 2 + 1 for i in range(len(moves))],  # Numéro du coup
+        "Player": ["White" if i % 2 == 0 else "Black" for i in range(len(moves))],  # Joueur
+        "Move": moves,
+        "Time": times
+    }
+
+    df = pd.DataFrame(data)
+
+    return clean_pgn, df
+
+
+def get_pgn_sequences(pgn):
+    """
+    Retourne uniquement la partie séquence de coups du pgn
+    
+    Args:
+        pgn (str): str contenant toutes les informations de la partie
+    Returns:
+        Seulement la séquence de coup "1. c4 {[%clk 63:02:21]} 1... Nf6 {[%clk 7:43:58]} etc..."
+    """
+    return pgn.split("\n")[-1]
