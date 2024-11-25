@@ -1,4 +1,7 @@
 # Exclure les fichiers JSON de plus de 100 Mo
 *.json
 data/
+<<<<<<< HEAD
+=======
 stockfish/
+>>>>>>> f7296e52df7c0877a4c8c274581610103a24151a
