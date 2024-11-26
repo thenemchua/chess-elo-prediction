@@ -1,0 +1,2 @@
+def alain():
+    pass
