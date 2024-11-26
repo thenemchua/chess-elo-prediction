@@ -105,7 +105,7 @@ def pgn_per_color(pgn):
 
 def extract_moves_and_times_pgn(df):
     """
-    Input = df de base sortie du fichier .json
+    Input = df de base venant du fichier .json
     Permet de créer les colonnes time_control, increment, pgn_all, pgn_w, pgn_b, times_all, times_w, times_b
     """
     df["time_control"]=df["pgn"].apply(lambda x: func_time_control(x))
