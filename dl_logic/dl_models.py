@@ -1,5 +1,3 @@
-def alain():
-    pass
 '''
 This file contains all the deep learning models, including initialization and compiling
 '''
@@ -210,3 +208,8 @@ def predict_baseline_model(model,X,tk):
     X,tk=preprocessing_baseline_francois(X,tk)
     y_pred=model.predict(X)
     return y_pred
+
+
+
+
+
