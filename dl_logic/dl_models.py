@@ -20,24 +20,24 @@ import pandas as pd
 def initialize_CNN_LSTM_model(input_shape):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
-    
+
     # CNN
-    
+
     # Layer 1
     model.add(layers.conv3D(64, (2,2,2), padding='same', input_shape=input_shape, activation="leaky_relu"))
     model.add(layers.BatchNormalization())
     model.add(layers.AveragePooling3D())
-    
+
     # Layer 2
     model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
     model.add(layers.AveragePooling3D)
-    
+
     # Layer 3
     model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
     model.add(layers.AveragePooling3D())
-    
+
     # Layer 4
     model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
@@ -45,17 +45,17 @@ def initialize_CNN_LSTM_model(input_shape):
 
     # LSTM
     model.add(layers.Bidirectional())
-    
-    
+
+
     # Output
     model.add(layers.Dense(2, activation='linear'))
-    
+
     # Model Compiling
     optimizer = optimizers.Adam(learning_rate=learning_rate)
     model.compile(loss="mean_squared_error", optimizer=optimizer, metrics=["mae"])
-    
+
     return model
-    
+
 
 def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
     """
@@ -109,7 +109,7 @@ def evaluate_CNN_LSTM_model(model, X, y, batch_size=32):
 
     return metrics
 
-  
+
 # BASELINE FRANCOIS
 
 def create_X_from_initial_data_for_baseline(df):
