@@ -20,6 +20,13 @@ def create_game_dict():
     return {'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[]}
 
 
+def create_evaluated_game_dict():
+    '''
+    Crée un dictionnaire avec les colonnes après évaluation
+    '''
+    return {'fen':[], 'pgn':[], 'white_rating':[], 'black_rating':[], 'white_result':[], 'black_result':[], 'opening':[], 'evaluation':[], 'best_move':[], 'mate':[]}
+
+
 def create_games_dict():
     '''
     Crée un dictionnaire vide de données par mode de jeu
@@ -612,3 +619,56 @@ def get_pgn_sequences(pgn):
         Seulement la séquence de coup "1. c4 {[%clk 63:02:21]} 1... Nf6 {[%clk 7:43:58]} etc..."
     """
     return pgn.split("\n")[-1]
+
+
+def reconstitute_json(input_dir, output_dir):
+    """
+    Assemble les JSONS qui ont été segmentés en n part_n et les sauvegarde dans output_dir
+    
+    Args:
+        input_dir (str): chemin qui contient les jsons segmentés
+        output_dir (str): chemin vers l'endroit où on veut sauvegarder notre full_json
+    Returns:
+
+    """
+    full_json = create_evaluated_game_dict()
+    
+    # Récupère la taille dans le nom du fichier (nombre de parties par tranche de 100 elo)
+    size = os.path.basename(input_dir)
+    
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for f in os.listdir(input_dir):
+        if f.endswith(".json"):
+            filename = os.path.join(input_dir, f)
+            
+            
+            curr_json = read_json_to_dict(filename)
+            
+            # Récupère les valeurs correspondantes
+            fen = [curr_json['fen'][k] for k in curr_json['fen']]
+            pgn = [curr_json['pgn'][k] for k in curr_json['pgn']]
+            white_rating = [curr_json['white_rating'][k] for k in curr_json['white_rating']]
+            black_rating = [curr_json['black_rating'][k] for k in curr_json['black_rating']]
+            white_result = [curr_json['white_result'][k] for k in curr_json['white_result']]
+            black_result = [curr_json['black_result'][k] for k in curr_json['black_result']]
+            opening = [curr_json['opening'][k] for k in curr_json['opening']]
+            evaluation = [curr_json['evaluation'][k] for k in curr_json['evaluation']]
+            best_move = [curr_json['best_move'][k] for k in curr_json['best_move']]
+            mate = [curr_json['mate'][k] for k in curr_json['mate']]
+            
+            # rempli le json
+            full_json['fen'].extend(fen)
+            full_json['pgn'].extend(pgn)
+            full_json['white_rating'].extend(white_rating)
+            full_json['black_rating'].extend(black_rating)
+            full_json['white_result'].extend(white_result)
+            full_json['black_result'].extend(black_result)
+            full_json['opening'].extend(opening)
+            full_json['evaluation'].extend(evaluation)
+            full_json['best_move'].extend(best_move)
+            full_json['mate'].extend(mate)
+    
+    output_path = os.path.join(output_dir, f"full_evaluated_{size}.json")
+    save_dict_to_json(output_path, full_json)
