@@ -11,9 +11,11 @@ from Utils import utils
 from Utils import chess_evaluation
 from iso3166 import countries
 
-data_folder = "evaluated_data"
-output_dir="evaluated_data"
 
-chess_evaluation.evaluate_games_in_directory(data_folder, output_dir, depth=1, workers=1)
+
+sizes = [10000, 50000]
+bucket_name = "chess_elo_prediction_lw1812"
+for size in sizes:
+    utils.reconstitute_json_in_gcloud(bucket_name, size)
 
 print('Opération terminée')
