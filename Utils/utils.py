@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 
 from google.cloud import storage
+from Utils import preprocessing
 
 def create_game_dict():
     '''
@@ -768,3 +769,100 @@ def reconstitute_json_in_gcloud(bucket_name, size):
         upblob = bucket.blob(f"full/full_evaluated_{mode}_{size}")
         upblob.upload_from_string(json.dumps(full_json))
         print(f"file saved to full/full_evaluated_{mode}_{size}")
+        
+
+def json_to_parquet(input_dir, output_dir):
+    """
+    Converti les json en parquet sans conserver la colonne fen
+    
+    Args:
+    input_dir (str): chemin qui contient les jsons segmentés
+    output_dir (str): chemin vers l'endroit où on veut sauvegarder notre full_json
+    Returns:
+    """
+    
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
+    
+    game_modes = ['blitz', 'bullet', 'daily', 'rapid']
+    for mode in game_modes:
+        for f in os.listdir(input_dir):
+            # On vérifie que c'est un fichier json du mode correspondant
+            if f.endswith(".json") and mode in f:
+                print(f'Traitement de {f} en cours')
+                filename = os.path.join(input_dir, f)
+                j_df = pd.read_json(filename)
+                j_df = j_df.drop(columns='fen')
+                output_path = os.path.join(output_dir, f"{os.path.basename(f).split('.')[0]}.parquet")
+                j_df.to_parquet(output_path)
+                print(f'file saved to {output_path}')
+                
+
+def pd_reconstitute_full_parquet(input_dir, output_dir, mode):
+    """
+    Assemble les parquets en utilisant pandas qui ont été segmentés en n part_n et les sauvegarde dans output_dir
+    
+    Args:
+        input_dir (str): chemin qui contient les jsons segmentés
+        output_dir (str): chemin vers l'endroit où on veut sauvegarder notre full_json
+        mode (str): game mode
+    Returns:
+
+    """
+    full_parquet = pd.DataFrame()
+    
+    # Récupère la taille dans le nom du fichier (nombre de parties par tranche de 100 elo)
+    size = os.path.basename(input_dir.split('/')[-1].split('_')[0])
+    
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Sauvegarde un fichier par mode de jeu
+    for f in os.listdir(input_dir):
+        # On vérifie que c'est un fichier json du mode correspondant
+        if f.endswith(".parquet") and mode in f:
+            print(f'Traitement de {f} en cours')
+            filename = os.path.join(input_dir, f)
+            full_parquet = pd.concat((full_parquet, pd.read_parquet(filename)))
+            full_parquet = full_parquet.reset_index(drop=True)
+            full_parquet[full_parquet.select_dtypes(np.number).columns] = full_parquet[full_parquet.select_dtypes(np.number).columns].astype('int16')
+            
+    output_path = os.path.join(output_dir, f"full_evaluated_{mode}_{size}.parquet")
+    full_parquet.to_parquet(output_path)
+
+
+def pd_reconstitue_partial_parquet(input_dir, output_dir, mode):
+    """
+    Assemble les parquets en utilisant pandas qui ont été segmentés en n part_n et les sauvegarde dans output_dir
+    
+    Args:
+        input_dir (str): chemin qui contient les jsons segmentés
+        output_dir (str): chemin vers l'endroit où on veut sauvegarder notre full_json
+        mode (str): game mode
+    Returns:
+
+    """
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
+
+    for f in os.listdir(input_dir):
+        res_df = pd.DataFrame()
+        if f.endswith(".parquet") and mode in f:
+            print(f'Traitement de {f} en cours')
+            filename = os.path.join(input_dir, f)        
+            df = pd.read_parquet(filename)
+            
+            res_df['pgn'] = df["pgn"].apply(lambda x: " ".join(preprocessing.pgn_per_color(x)[0]))
+            res_df['white_rating'] = df['white_rating'].astype('int16')
+            res_df['black_rating'] = df['black_rating'].astype('int16')
+            res_df['time_control'] = df["pgn"].apply(lambda x: preprocessing.func_time_control(x))
+            res_df['increment'] = df["pgn"].apply(lambda x: preprocessing.func_increment(x))
+            res_df['time_per_move'] = df["pgn"].apply(lambda x: preprocessing.times_per_color(x)[0])
+
+            # Reset index for better memory usage
+            del df
+            res_df = res_df.reset_index(drop=True)
+            
+            output_path = os.path.join(output_dir, f"partial_{os.path.basename(f).split('.')[0]}.parquet")
+            res_df.to_parquet(output_path)
+            print(f'file saved to {output_path}')
