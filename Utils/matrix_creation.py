@@ -9,23 +9,23 @@ def list_epd_per_move(pgn):
     """
     Permet de récupérer les epd (statut du plateau) après chaque coup à partir de la liste des coups inclus dans le pgn.
     """
-
+    pgn=pgn.split()
     board = chess.Board() # initialise le board à 0
     list_epd=[]
     for move in pgn:
         # transforme le coup SAN en départ / arrivée
         m=board.parse_san(move)
-        
+
         # réalise le mouvement
         board.push(m)
-        
+
         # sort le fen (un état du board dans la partie)
         epd=board.epd()
-        
+
         # epd cleaning
-        epd=epd.split(" ")[0]
+        epd=epd.split()[0]
         epd=epd.split("/")
-        
+
         # tous les états de la partie
         list_epd.append(epd)
 
@@ -72,7 +72,7 @@ def create_matrice_from_pgn(pgn,n):
     list_matrices=[]
 
     for epd in list_epd:
-        matrice= np.zeros((n,8,8), dtype=object)
+        matrice= np.zeros((n,8,8), dtype=float)
         if n==1:
             for i, row in enumerate(epd):
                 k=0
