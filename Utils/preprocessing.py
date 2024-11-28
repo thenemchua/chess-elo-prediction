@@ -4,9 +4,9 @@ import datetime
 import numpy as np
 from Utils import utils
 
-def extract_opening(DataFrame):
-    DataFrame["opening"] = DataFrame["opening"].str.extract(r'openings/([^\.]+)')
-    return DataFrame
+def extract_opening(df):
+    df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
+    return df
 
 
 def func_time_control(pgn):
@@ -116,4 +116,22 @@ def extract_moves_and_times_pgn(df):
     df["times_all"]=df["pgn"].apply(lambda x: times_per_color(x)[0])
     df["times_w"]=df["pgn"].apply(lambda x: times_per_color(x)[1])
     df["times_b"]=df["pgn"].apply(lambda x: times_per_color(x)[2])
+    df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
+    return df
+
+
+def extract_moves_and_times_pgn_2(df):
+    """
+    Input = df de base venant du fichier .json
+    Permet de créer les colonnes time_control, increment, pgn_all, pgn_w, pgn_b, times_all, times_w, times_b
+    """
+    df["time_control"]=df["pgn"].apply(lambda x: func_time_control(x))
+    df["increment"]=df["pgn"].apply(lambda x: func_increment(x))
+    df["pgn_all"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[0]))
+    df["pgn_w"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[1]))
+    df["pgn_b"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[2]))
+    df["times_all"]=df["pgn"].apply(lambda x: times_per_color(x)[0])
+    df["times_w"]=df["pgn"].apply(lambda x: times_per_color(x)[1])
+    df["times_b"]=df["pgn"].apply(lambda x: times_per_color(x)[2])
+    df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
     return df
