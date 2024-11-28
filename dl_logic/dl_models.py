@@ -10,7 +10,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, BatchNormalization
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -217,11 +217,14 @@ def initialize_baseline_model_2(X,max_len=250,embedding_dim=10):
     model = Sequential()
     model.add(Embedding(input_dim=max_features,output_dim=embedding_dim, input_length=max_len))
     model.add(LSTM(128, return_sequences=True))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     model.add(LSTM(64, return_sequences=True))
+    model.add(Dropout(0.3))
     model.add(LSTM(32, return_sequences=True))
+    model.add(Dropout(0.3))
     model.add(LSTM(64))
     model.add(Dropout(0.3))
+    model.add(BatchNormalization())
     model.add(Dense(64, activation='relu'))
     model.add(Dense(32, activation='relu'))
     model.add(Dense(1, activation='linear'))
