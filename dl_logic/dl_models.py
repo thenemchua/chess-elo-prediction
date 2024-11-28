@@ -3,7 +3,8 @@ This file contains all the deep learning models, including initialization and co
 '''
 from tensorflow.keras import layers
 from tensorflow.keras import models
-from tensorflow.callbacks import EarlyStopping
+from tensorflow.keras import optimizers
+from tensorflow.keras.callbacks import EarlyStopping
 
 import numpy as np
 import tensorflow as tf
@@ -17,34 +18,34 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from Utils import preprocessing
 import pandas as pd
 
-def initialize_CNN_LSTM_model(input_shape):
+def initialize_CNN_LSTM_model(input_shape, learning_rate=0.1):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
 
     # CNN
 
     # Layer 1
-    model.add(layers.conv3D(64, (2,2,2), padding='same', input_shape=input_shape, activation="leaky_relu"))
+    model.add(layers.Conv3D(2, (2,2,2), padding='same', input_shape=input_shape, activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    model.add(layers.AveragePooling3D())
+    # model.add(layers.AveragePooling3D(pool_size=3))
 
     # Layer 2
-    model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    model.add(layers.AveragePooling3D)
+    # model.add(layers.AveragePooling3D(pool_size=3))
 
     # Layer 3
-    model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    model.add(layers.AveragePooling3D())
+    # model.add(layers.AveragePooling3D(pool_size=3))
 
     # Layer 4
-    model.add(layers.conv3D(64, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    model.add(layers.AveragePooling3D())
+    # model.add(layers.AveragePooling3D(pool_size=3))
 
     # LSTM
-    model.add(layers.Bidirectional())
+    # model.add(layers.Bidirectional())
 
 
     # Output
@@ -208,8 +209,3 @@ def predict_baseline_model(model,X,tk):
     X,tk=preprocessing_baseline_francois(X,tk)
     y_pred=model.predict(X)
     return y_pred
-
-
-
-
-
