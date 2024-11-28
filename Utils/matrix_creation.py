@@ -13,11 +13,20 @@ def list_epd_per_move(pgn):
     board = chess.Board() # initialise le board à 0
     list_epd=[]
     for move in pgn:
-        m=board.parse_san(move) # transforme le coup SAN en départ / arrivée
-        board.push(m) # réalise le mouvement
+        # transforme le coup SAN en départ / arrivée
+        m=board.parse_san(move)
+        
+        # réalise le mouvement
+        board.push(m)
+        
+        # sort le fen (un état du board dans la partie)
         epd=board.epd()
+        
+        # epd cleaning
         epd=epd.split(" ")[0]
         epd=epd.split("/")
+        
+        # tous les états de la partie
         list_epd.append(epd)
 
     return list_epd
