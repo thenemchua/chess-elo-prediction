@@ -55,7 +55,7 @@ from Utils import matrix_creation
 if __name__ == "__main__":
 
     bucket_name="chess_elo_prediction_lw1812"
-    gcloud_filepath="full_data/full_evaluated_daily_10000.parquet"
+    gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
 
     df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
     X = df[["pgn"]]
