@@ -46,20 +46,19 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 
-from Utils import tensor_chess
 from Utils import preprocessing
-
 
 from dl_logic import dl_models
 from Utils import matrix_creation
 
-%load_ext autoreload
-%autoreload 2
 
 if __name__ == "__main__":
 
-    df=utils.read_parquet_from_gcloud_df("chess_elo_prediction_lw1812","full_data/full_evaluated_daily_10000.parquet")
-    X=dl_models.create_X_from_initial_data_for_baseline(df)
+    bucket_name="chess_elo_prediction_lw1812"
+    gcloud_filepath="full_data/full_evaluated_daily_10000.parquet"
+
+    df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
+    X = df[["pgn"]]
     y=dl_models.create_y_from_initial_data_for_baseline(df)
 
     X=X.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
