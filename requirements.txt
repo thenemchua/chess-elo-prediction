@@ -27,5 +27,9 @@ google-resumable-media==2.4.0
 google-trans-new==1.1.9
 googleapis-common-protos==1.56.4
 iso3166==2.1.1
+# API
+fastapi         # API framework
+pytz            # time zone management
+uvicorn         # web server
 tensorflow-macos==2.10.0; sys_platform == 'darwin' and 'ARM' in platform_version # Mac M-chips
 tensorflow==2.10.0; sys_platform == 'darwin' and 'ARM' not in platform_version # Mac Intel chips
