@@ -5,3 +5,9 @@ stockfish/
 notebooks/
 .DS_Store
 __pycache__
+.env
+.envrc
+full_data/
+partial_data/
+partial_full_data/
+evaluated_data/
