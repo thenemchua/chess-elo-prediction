@@ -38,8 +38,8 @@ def initial_dl_model(df,num_epochs) :
     history, model, tk=dl_models.fit_baseline_model(model,X_train,y_train,batch_size=32, epochs=num_epochs, validation_split=0.2)
     result = dl_models.predict_baseline_model(model, X_test,tk)
     return result
+<<<<<<< HEAD
+=======
 
-# plt.plot(history.history['loss'], label='Training Loss')
-# plt.plot(history.history['val_loss'], label='Validation Loss')
-# plt.legend()
-# plt.show()
+>>>>>>> feature-encoding
+
