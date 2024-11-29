@@ -18,7 +18,8 @@ if __name__ == "__main__":
     print('Reading file from gcp...')
     
     df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
-    X = df["pgn"]
+    # X = df["pgn"]
+    X = dl_models.create_X_from_initial_data_for_baseline(df)
     y=dl_models.create_y_from_initial_data_for_baseline(df)
 
     print('\nX,y initialized!')
