@@ -1,6 +1,27 @@
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
+"""
+What's the input to the models in the github Ai-Guess-the-elo ?
+The model takes 2 inputs, a tensor with the board positions and a tensor with the evaluation from stockfish
+
+The board positions are a (2, seq, 2, 8, 8) tensor.
+
+-->    2, for the batch dimension to parse white and black together
+-->    seq, the number of moves in the game
+-->    2, channels for the cnn. One has the board representation and another is a mask with 1 or -1, depending on whose turn it is
+-->    8 x 8, is the size of the chess board
+
+The evaluation tensor is a (2, seq, 17) tensor.
+
+-->    2, for the batch dimension
+-->    seq, the number of moves in the game
+-->    17 some useful information about the position before and after the move.
+       The top 10 move evaluations before the move was played and the win/draw/loss chance the engine gives,
+       the evaluation after the move was played and the win/draw/lose chance after the move.
+"""
+
+
 def initialize_model_LSTM (num_filters,position_shape): #maybe add more things
 
     position_model = models.Sequential # model from position --> in the github Ai-Guess-the-elo The board positions are a (2, seq, 2, 8, 8) tensor.
