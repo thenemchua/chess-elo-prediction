@@ -15,7 +15,7 @@ COPY model model
 COPY setup.py setup.py
 RUN pip install .
 
-EXPOSE 8000
+EXPOSE 8080
 
 # controls functinnality of the container
 # uvicorn to control the server port
@@ -24,4 +24,4 @@ EXPOSE 8000
 CMD uvicorn api.app_file:app --host 0.0.0.0
 
 # Deploy to GCP
-#CMD uvicorn api.app_file:app --host 0.0.0.0 --port $PORT
+CMD uvicorn api.app_file:app --host 0.0.0.0 --port 8080
