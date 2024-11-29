@@ -39,7 +39,4 @@ def initial_dl_model(df,num_epochs) :
     result = dl_models.predict_baseline_model(model, X_test,tk)
     return result
 
-# plt.plot(history.history['loss'], label='Training Loss')
-# plt.plot(history.history['val_loss'], label='Validation Loss')
-# plt.legend()
-# plt.show()
+
