@@ -3,8 +3,10 @@ This file contains all the deep learning models, including initialization and co
 '''
 from tensorflow.keras import layers
 from tensorflow.keras import models
-# from tensorflow.callbacks import EarlyStopping
 from tensorflow.keras import optimizers
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint
+
 
 import numpy as np
 import tensorflow as tf
@@ -25,7 +27,7 @@ def initialize_CNN_LSTM_model(input_shape, learning_rate=0.1):
     # CNN
 
     # Layer 1
-    model.add(layers.Conv3D(2, (2,2,2), padding='same', input_shape=input_shape, activation="leaky_relu"))
+    model.add(layers.Conv3D(2, (2,2,2), input_shape=input_shape, activation="leaky_relu"))
     model.add(layers.BatchNormalization())
     # model.add(layers.AveragePooling3D(pool_size=3))
 
@@ -49,11 +51,13 @@ def initialize_CNN_LSTM_model(input_shape, learning_rate=0.1):
 
 
     # Output
-    model.add(layers.Dense(2, activation='linear'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(1, activation='linear'))
+
 
     # Model Compiling
     optimizer = optimizers.Adam(learning_rate=learning_rate)
-    model.compile(loss="mean_squared_error", optimizer=optimizer, metrics=["mae"])
+    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
 
     return model
 
@@ -70,6 +74,13 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         verbose=1
     )
 
+    checkpoint_filepath = 'checkpoint/checkpoint_new.model.keras'
+    model_checkpoint_callback = ModelCheckpoint(
+        filepath=checkpoint_filepath,
+        monitor='val_mae',
+        mode='min',
+        save_best_only=True)
+
     history = model.fit(
         X,
         y,
@@ -77,8 +88,8 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         validation_split=validation_split,
         epochs=epochs,
         batch_size=batch_size,
-        callbacks=[es],
-        verbose=0
+        callbacks=[es,model_checkpoint_callback],
+        verbose=1
     )
 
     return model, history
