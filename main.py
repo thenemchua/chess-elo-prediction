@@ -1,6 +1,7 @@
 from Utils import utils
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import pandas as pd
 
 from dl_logic import dl_models
 from Utils import matrix_creation
@@ -11,7 +12,8 @@ tqdm.pandas()
 if __name__ == "__main__":
 
     bucket_name="chess_elo_prediction_lw1812"
-    gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
+    # gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
+    gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
 
     print('Reading file from gcp...')
     
@@ -26,6 +28,10 @@ if __name__ == "__main__":
     X=X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
     end = time.time()
     print(f'\nCréation de matrice en {end-start}s')
+    
+    print('\nSaving dataframe to parquet')
+    save_df = pd.DataFrame(X)
+    save_df.to_parquet('X_matriced.parquet')
     
     X_pad = pad_sequences(X, padding='post',maxlen=150, dtype= "int64")
 
