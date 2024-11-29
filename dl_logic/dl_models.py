@@ -74,7 +74,7 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         verbose=1
     )
 
-    checkpoint_filepath = 'checkpoint/checkpoint.model.keras'
+    checkpoint_filepath = 'checkpoint/checkpoint_new.model.keras'
     model_checkpoint_callback = ModelCheckpoint(
         filepath=checkpoint_filepath,
         monitor='val_mae',
@@ -89,7 +89,7 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         epochs=epochs,
         batch_size=batch_size,
         callbacks=[es,model_checkpoint_callback],
-        verbose=0
+        verbose=1
     )
 
     return model, history
