@@ -5,6 +5,8 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from dl_logic import dl_models
 from Utils import matrix_creation
 import time
+from tqdm import tqdm
+tqdm.pandas()
 
 if __name__ == "__main__":
 
@@ -21,7 +23,7 @@ if __name__ == "__main__":
 
     print('\nCréation de matrices en cours...')
     start = time.time()
-    X=X.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
+    X=X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
     end = time.time()
     print(f'\nCréation de matrice en {end-start}s')
     
