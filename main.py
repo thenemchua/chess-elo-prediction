@@ -41,14 +41,14 @@ if __name__ == "__main__":
     # print('loading pkl')
     # load_df = pd.read_pickle('X_matriced.pkl')
 
-    X_pad = pad_sequences(X, padding='post',maxlen=150, dtype= "int64")
+    # X_pad = pad_sequences(X, padding='post',maxlen=150, dtype= "int64")
 
-    X_train,X_test, y_train,y_test = train_test_split(X_pad, y, test_size=0.2)
+    # X_train,X_test, y_train,y_test = train_test_split(X_pad, y, test_size=0.2)
 
-    print('\nInitializing model...')
-    model = dl_models.initialize_CNN_LSTM_model(X_pad[0].shape)
-    print('\nModel initialized')
+    # print('\nInitializing model...')
+    # model = dl_models.initialize_CNN_LSTM_model(X_pad[0].shape)
+    # print('\nModel initialized')
 
-    dl_models.train_CNN_LSTM_model(model, X_train , y_train, epochs=5, batch_size=32, patience=2, validation_data=None, validation_split=0.3)
+    # dl_models.train_CNN_LSTM_model(model, X_train , y_train, epochs=5, batch_size=32, patience=2, validation_data=None, validation_split=0.3)
 
     print('\nOpération terminée')
