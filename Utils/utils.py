@@ -891,4 +891,6 @@ def read_parquet_from_gcloud_df(bucket_name, gcloud_path):
     
     # Load the parquet data into a DataFrame
     df = pd.read_parquet(BytesIO(data))
+    
+    print(f'df loaded from {gcloud_path}')
     return df
