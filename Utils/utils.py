@@ -16,6 +16,9 @@ import numpy as np
 from google.cloud import storage
 from Utils import preprocessing
 
+from io import BytesIO
+
+
 def create_game_dict():
     '''
     Crée le format de data qu'on veut exploiter
@@ -866,3 +869,26 @@ def pd_reconstitue_partial_parquet(input_dir, output_dir, mode):
             output_path = os.path.join(output_dir, f"partial_{os.path.basename(f).split('.')[0]}.parquet")
             res_df.to_parquet(output_path)
             print(f'file saved to {output_path}')
+
+
+def read_parquet_from_gcloud_df(bucket_name, gcloud_path):
+    """
+    Load a file from gcloud and returns a df
+    
+    Args:
+        bucket_name (str): 
+        gcloud_path (str): 
+
+    Returns:
+        returns a parquet file as a dataframe 
+    """
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(gcloud_path)
+    
+    # Read the file into memory
+    data = blob.download_as_bytes()
+    
+    # Load the parquet data into a DataFrame
+    df = pd.read_parquet(BytesIO(data))
+    return df
