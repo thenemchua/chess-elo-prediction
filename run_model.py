@@ -7,6 +7,8 @@ import os
 from dl_logic import dl_models
 from Utils import matrix_creation
 import time
+from tqdm import tqdm
+tqdm.pandas()
 
 if __name__ == "__main__":
 
