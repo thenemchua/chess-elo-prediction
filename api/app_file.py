@@ -14,6 +14,6 @@ def status():
 def predict(X):
 
     #model = pickle.load_model()
-    prediction = forecast(X)
+    prediction = "test"
 
     return {'forecast': prediction}
