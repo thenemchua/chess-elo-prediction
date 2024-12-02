@@ -77,7 +77,7 @@ def initialize_CNN_model(input_shape, learning_rate=0.1):
 
     # Output CNN
     model.add(layers.Flatten())
-    model.add(layers.Dense(input_shape[0], activation='linear'))
+    model.add(layers.Dense(1, activation='linear'))
 
     # # LSTM
     # # model.add(layers.Flatten())
