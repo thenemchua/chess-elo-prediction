@@ -32,5 +32,5 @@ X_train, X_test, y_train, y_test = train_test_split(X_pad,y)
 
 
 print('\nTraining model...')
-dl_models.train_model(model, X_train, y_train, ckp_filename='CNN_on_concat_pkl', epochs=100, validation_data=(X_test, y_test), patience=100)
+dl_models.train_model(model, X_train, y_train, ckp_filename='CNN_on_concat_pkl', epochs=27, validation_data=(X_test, y_test), patience=100)
 print('\nEverything done!')
