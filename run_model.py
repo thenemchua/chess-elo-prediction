@@ -7,13 +7,11 @@ import os
 from dl_logic import dl_models
 from Utils import matrix_creation
 import time
-from tqdm import tqdm
-tqdm.pandas()
 
 if __name__ == "__main__":
 
     bucket_name="chess_elo_prediction_lw1812"
-    gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
+    gcloud_filepath="pgn_time_increment_rating_data/cleaned_full_blitz_50000.parquet"
     # gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
 
     print('Reading file from gcp...')
@@ -27,7 +25,7 @@ if __name__ == "__main__":
 
     print('\nCréation de matrices en cours...')
     start = time.time()
-    X=X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
+    X=X.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
     end = time.time()
     print(f'\nCréation de matrice en {end-start}s')
 
