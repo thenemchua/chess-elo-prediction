@@ -44,8 +44,6 @@ def chatgpt_model(input_shape):
     
     return model
 
-    
-
 
 def initialize_CNN_model(input_shape, learning_rate=0.1):
     model = models.Sequential()
@@ -92,6 +90,54 @@ def initialize_CNN_model(input_shape, learning_rate=0.1):
 
     return model
 
+
+
+def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
+    model = models.Sequential()
+    model.add(layers.Input(shape=input_shape))
+
+    # CNN
+
+    # Layer 1
+    model.add(layers.Conv2D(128, (2,2), input_shape=input_shape, activation="leaky_relu"))
+    model.add(layers.BatchNormalization())
+    model.add(layers.AveragePooling2D(pool_size=(1,1)))
+    model.add(Dropout(0.15))
+    
+    # Layer 2
+    model.add(layers.Conv2D(64, (2,2), activation="leaky_relu"))
+    model.add(layers.BatchNormalization())
+    model.add(layers.AveragePooling2D(pool_size=(1,1)))
+
+    # Layer 3
+    model.add(layers.Conv2D(32, (2,2), activation="leaky_relu"))
+    model.add(layers.BatchNormalization())
+    model.add(layers.AveragePooling2D(pool_size=(1,1)))
+
+    # Layer 4
+    model.add(layers.Conv2D(16, (2,2), activation="leaky_relu"))
+    model.add(layers.BatchNormalization())
+    model.add(layers.AveragePooling2D(pool_size=(1,1)))
+    model.add(Dropout(0.15))
+
+    # Output CNN
+    model.add(layers.Flatten())
+    model.add(layers.Dense(input_shape[0], activation='linear'))
+
+    # # LSTM
+    # # model.add(layers.Flatten())
+    # model.add(layers.LSTM(20, return_sequences=False))
+
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(1, activation='linear'))
+
+    # Model Compiling
+    optimizer = optimizers.Adam(learning_rate=learning_rate)
+    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+
+    return model
+
+
 def initialize_LSTM_model(input_shape=(150,1), learning_rate=0.1):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
@@ -122,7 +168,7 @@ def initialize_LSTM_model(input_shape=(150,1), learning_rate=0.1):
 
     return model
 
-def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
+def train_model(model, X , y, ckp_filename, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
     """
     Fit the model and return a tuple (fitted_model, history)
     """
@@ -134,7 +180,7 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         verbose=1
     )
 
-    checkpoint_filepath = 'checkpoint/CNN_LSTM.model.keras'
+    checkpoint_filepath = f'checkpoint/{ckp_filename}.model.keras'
     model_checkpoint_callback = ModelCheckpoint(
         filepath=checkpoint_filepath,
         monitor='val_mae',
