@@ -28,6 +28,6 @@ if __name__ == "__main__":
     print('\nModel initialized')
 
     print('\nTraining model...')
-    model, history = dl_models.train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=6, batch_size=32, patience=, validation_data=None, validation_split=0.2)
+    model, history = dl_models.train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=6, batch_size=32, patience=6, validation_data=None, validation_split=0.2)
 
     print('\nOpération terminée')
