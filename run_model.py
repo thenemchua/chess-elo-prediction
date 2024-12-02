@@ -7,8 +7,6 @@ import os
 from dl_logic import dl_models
 from Utils import matrix_creation
 import time
-from tqdm import tqdm
-tqdm.pandas()
 
 if __name__ == "__main__":
 
@@ -23,6 +21,7 @@ if __name__ == "__main__":
     # df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
     X = utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)["pgn"]
     # X = dl_models.create_X_from_initial_data_for_baseline(df)
+
     # y=dl_models.create_y_from_initial_data_for_baseline(df)
 
     print('\nX initialized!')

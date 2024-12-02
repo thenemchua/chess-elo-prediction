@@ -135,3 +135,29 @@ def extract_moves_and_times_pgn_2(df):
     df["times_b"]=df["pgn"].apply(lambda x: times_per_color(x)[2])
     df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
     return df
+
+def pgn_from_chess_com(pgn):
+    """
+    Input = pgn provenant de chess.com
+    Permet de préprocesser le pgn provenant directement de chess.com
+    """
+    # Extraire les lignes de mouvements et les nettoyer
+    moves = ' '.join(line for line in pgn.split('\n') if not line.startswith('[')).strip()
+    # Supprimer les numéros de coups (ex : "1.", "2.")
+    moves = re.sub(r'\d+\.\s*', '', moves)
+    # Supprimer le résultat à la fin (0-1, 1-0, ou 1/2-1/2), s'il existe
+    moves = re.sub(r'\s?(0-1|1-0|1/2-1/2)\s?$', '', moves[:-1])
+    return moves.strip()
+
+def pgn_from_lichess(pgn):
+    """
+    Input = pgn provenant de lichess
+    Permet de préprocesser le pgn brute provenant directement de lichess
+    """
+    # Extraire les lignes de mouvements et les nettoyer
+    moves = ' '.join(line for line in pgn.split('\n') if not line.startswith('[')).strip()
+    # Supprimer les numéros de coups (ex : "1.", "2.")
+    moves = re.sub(r'\d+\.\s*', '', moves)
+    # # Supprimer le résultat à la fin (0-1, 1-0, ou 1/2-1/2), s'il existe
+    moves = re.sub(r'\s?(0-1|1-0|1/2-1/2)\s?$', '', moves)
+    return moves.strip()
