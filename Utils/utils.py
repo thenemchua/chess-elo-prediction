@@ -894,3 +894,27 @@ def read_parquet_from_gcloud_df(bucket_name, gcloud_path):
     
     print(f'df loaded from {gcloud_path}')
     return df
+
+
+def upload_pickle_to_gcp(bucket_name, filepath, destination_blob_name=None):
+    """
+    Upload a pickle file to Google Cloud Storage.
+
+    Args:
+        bucket_name (str): The name of the GCP bucket.
+        filepath (str): The local path to the pickle file.
+        destination_blob_name (str, optional): The destination path in the bucket. Defaults to the file name.
+    """
+    if destination_blob_name is None:
+        destination_blob_name = filepath.split("/")[-1]
+
+    client = storage.Client()
+
+    # Get the bucket
+    bucket = client.get_bucket(bucket_name)
+
+    # Upload the file
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(filepath)
+
+    print(f"File {filepath} uploaded to {bucket_name}/{destination_blob_name}.")

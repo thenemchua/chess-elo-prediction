@@ -13,47 +13,78 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, BatchNormalization
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, BatchNormalization,GRU,Attention
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 from Utils import preprocessing
 import pandas as pd
+from tensorflow.keras.regularizers import l2
 
-def initialize_CNN_LSTM_model(input_shape, learning_rate=0.1):
+
+
+def chatgpt_model(input_shape):
+    inputs = layers.Input(shape=input_shape)
+    
+    cnn = layers.TimeDistributed(models.Sequential([
+    layers.Conv3D(128, (2,2,2), input_shape=input_shape, activation="leaky_relu"),
+    layers.BatchNormalization(),
+    layers.AveragePooling3D(pool_size=(1,1,1))
+    ]))(inputs)
+    
+    lstm_out = layers.LSTM(128, return_sequences=False)(cnn)
+
+    dense_out = layers.Dense(10, activation='linear')(lstm_out)
+
+    # Construire le modèle
+    model = tf.keras.Model(inputs=inputs, outputs=dense_out)
+
+    # Compiler le modèle
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    
+    return model
+
+    
+
+
+def initialize_CNN_model(input_shape, learning_rate=0.1):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
 
     # CNN
 
     # Layer 1
-    model.add(layers.Conv3D(2, (2,2,2), input_shape=input_shape, activation="leaky_relu"))
+    model.add(layers.Conv3D(128, (2,2,2), input_shape=input_shape, activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    # model.add(layers.AveragePooling3D(pool_size=3))
-
+    model.add(layers.AveragePooling3D(pool_size=(1,1,1)))
+    model.add(Dropout(0.15))
+    
     # Layer 2
-    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(64, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    # model.add(layers.AveragePooling3D(pool_size=3))
+    model.add(layers.AveragePooling3D(pool_size=(1,1,1)))
 
     # Layer 3
-    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(32, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    # model.add(layers.AveragePooling3D(pool_size=3))
+    model.add(layers.AveragePooling3D(pool_size=(1,1,1)))
 
     # Layer 4
-    model.add(layers.Conv3D(2, (2,2,2), activation="leaky_relu"))
+    model.add(layers.Conv3D(16, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
-    # model.add(layers.AveragePooling3D(pool_size=3))
+    model.add(layers.AveragePooling3D(pool_size=(1,1,1)))
+    model.add(Dropout(0.15))
 
-    # LSTM
-    # model.add(layers.Bidirectional())
-
-
-    # Output
+    # Output CNN
     model.add(layers.Flatten())
-    model.add(layers.Dense(1, activation='linear'))
+    model.add(layers.Dense(input_shape[0], activation='linear'))
 
+    # # LSTM
+    # # model.add(layers.Flatten())
+    # model.add(layers.LSTM(20, return_sequences=False))
+
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(1, activation='linear'))
 
     # Model Compiling
     optimizer = optimizers.Adam(learning_rate=learning_rate)
@@ -61,6 +92,35 @@ def initialize_CNN_LSTM_model(input_shape, learning_rate=0.1):
 
     return model
 
+def initialize_LSTM_model(input_shape=(150,1), learning_rate=0.1):
+    model = models.Sequential()
+    model.add(layers.Input(shape=input_shape))
+    
+    # model.add(layers.LSTM(20, return_sequences=True))
+    # model.add(layers.LSTM(20, return_sequences=False))
+    model.add(LSTM(128, return_sequences=True))
+    model.add(Dropout(0.15))
+    model.add(LSTM(64, return_sequences=True))
+    model.add(Dropout(0.15))
+    model.add(LSTM(32, return_sequences=True))
+    model.add(Dropout(0.15))
+    model.add(LSTM(64))
+    model.add(Dropout(0.15))
+    model.add(BatchNormalization())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(1, activation='linear'))
+
+
+
+    model.add(layers.Flatten())
+    model.add(layers.Dense(1, activation='linear'))
+
+    # Model Compiling
+    optimizer = optimizers.Adam(learning_rate=learning_rate)
+    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+
+    return model
 
 def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
     """
@@ -74,7 +134,7 @@ def train_CNN_LSTM_model(model, X , y, epochs=100, batch_size=32, patience=2, va
         verbose=1
     )
 
-    checkpoint_filepath = 'checkpoint/checkpoint_new.model.keras'
+    checkpoint_filepath = 'checkpoint/CNN_LSTM.model.keras'
     model_checkpoint_callback = ModelCheckpoint(
         filepath=checkpoint_filepath,
         monitor='val_mae',
@@ -209,10 +269,10 @@ def initialize_baseline_model(X,max_len=250,embedding_dim=10):
 
 
 
-def fit_baseline_model(model,X,y,batch_size=32, epochs=3, validation_split=0.2):
+def fit_baseline_model(model,X,y,batch_size=32, epochs=3, validation_split=0.2,callbacks=None):
     X,tk=preprocessing_baseline_francois(X)
     print(X)
-    history = model.fit(X,y,batch_size=batch_size, epochs=epochs, validation_split=validation_split)
+    history = model.fit(X,y,batch_size=batch_size, epochs=epochs, validation_split=validation_split, callbacks=callbacks)
     return history, model, tk
 
 
@@ -221,7 +281,7 @@ def predict_baseline_model(model,X,tk):
     y_pred=model.predict(X)
     return y_pred
 
-def initialize_baseline_model_2(X,max_len=250,embedding_dim=10):
+def initialize_baseline_model_2(X,max_len=250,embedding_dim=10,dropout_rate=0.3):
 
     max_features=max_features_baseline(pd.DataFrame(X))
 
@@ -229,13 +289,38 @@ def initialize_baseline_model_2(X,max_len=250,embedding_dim=10):
     model = Sequential()
     model.add(Embedding(input_dim=max_features,output_dim=embedding_dim, input_length=max_len))
     model.add(LSTM(128, return_sequences=True))
-    model.add(Dropout(0.15))
+    model.add(Dropout(dropout_rate))
     model.add(LSTM(64, return_sequences=True))
-    model.add(Dropout(0.15))
+    model.add(Dropout(dropout_rate))
     model.add(LSTM(32, return_sequences=True))
-    model.add(Dropout(0.15))
+    model.add(Dropout(dropout_rate))
     model.add(LSTM(64))
-    model.add(Dropout(0.15))
+    model.add(Dropout(dropout_rate))
+    model.add(BatchNormalization())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(1, activation='linear'))
+
+    # Compile the model
+    model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+    return model
+
+
+
+def initialize_baseline_model_3(X,max_len=250,embedding_dim=10,dropout_rate=0.15):
+
+    max_features=max_features_baseline(pd.DataFrame(X))
+
+    # Build the model
+    model = Sequential()
+    model.add(Embedding(input_dim=max_features,output_dim=embedding_dim, input_length=max_len))
+    model.add(LSTM(128, return_sequences=True))
+    model.add(Dropout(dropout_rate))
+    model.add(LSTM(64, return_sequences=True))
+    model.add(Dropout(dropout_rate))
+    model.add(BatchNormalization())
+    model.add(LSTM(32, return_sequences=True))
+    model.add(Dropout(dropout_rate))
     model.add(BatchNormalization())
     model.add(Dense(64, activation='relu'))
     model.add(Dense(32, activation='relu'))
