@@ -249,7 +249,7 @@ def initialize_baseline_model_2(X,max_len=250,embedding_dim=10,dropout_rate=0.3)
 
 
 
-def initialize_baseline_model_attention(X,max_len=250,embedding_dim=10,dropout_rate=0.15):
+def initialize_baseline_model_3(X,max_len=250,embedding_dim=10,dropout_rate=0.15):
 
     max_features=max_features_baseline(pd.DataFrame(X))
 
@@ -263,10 +263,6 @@ def initialize_baseline_model_attention(X,max_len=250,embedding_dim=10,dropout_r
     model.add(BatchNormalization())
     model.add(LSTM(32, return_sequences=True))
     model.add(Dropout(dropout_rate))
-    #model.add(LSTM(64))
-    #model.add(Dropout(dropout_rate))
-    #model.add(LSTM(128, return_sequences=True)) ##en plus
-    #model.add(Dropout(dropout_rate)) ##en plus
     model.add(BatchNormalization())
     model.add(Dense(64, activation='relu'))
     model.add(Dense(32, activation='relu'))
