@@ -20,6 +20,9 @@ if __name__ == "__main__":
 
     print('Reading file from gcp...')
 
+    # Uncomment if reading file locally
+    # X = pd.read_parquet('')
+
     # df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
     X = utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)["pgn"]
     # X = dl_models.create_X_from_initial_data_for_baseline(df)
@@ -42,6 +45,7 @@ if __name__ == "__main__":
         print(f'\nCréation de matrices en cours à index[{start_idx}:{end_idx}]...')
         start = time.time()
         tmp_X = X[start_idx:end_idx]
+        # tmp_X = tmp_X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,1))
         tmp_X = tmp_X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,1))
         end = time.time()
         print(f'\nCréation de matrice en {end-start}s, index[{start_idx}:{end_idx}]')
