@@ -21,7 +21,7 @@ if __name__ == "__main__":
     print('Reading file from gcp...')
 
     # Uncomment if reading file locally
-    # X = pd.read_parquet('')
+    X = pd.read_parquet('')
 
     # df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
     X = utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)["pgn"]
@@ -46,20 +46,20 @@ if __name__ == "__main__":
         start = time.time()
         tmp_X = X[start_idx:end_idx]
         # tmp_X = tmp_X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,1))
-        tmp_X = tmp_X.progress_apply(lambda x: matrix_creation.create_matrice_from_pgn(x,1))
+        tmp_X = tmp_X.progress_apply(lambda x: matrix_creation.create_sparse_matrix_from_pgn(x))
         end = time.time()
         print(f'\nCréation de matrice en {end-start}s, index[{start_idx}:{end_idx}]')
         print('\nSaving dataframe to pkl')
         save_X = pd.DataFrame(tmp_X)
         print(f'\n df converted')
         os.makedirs('pkl', exist_ok=True)
-        save_X.to_pickle(f'pkl/X_pgn_matpreproc1_part_{i}.pkl')
+        save_X.to_pickle(f'pkl/X_pgn_matpreproc12_part_{i}.pkl')
         # save_X.to_parquet(f'pkl/X_pgn_matpreproc1_part_{i}.parquet')
         print(f'df saved to a pickle file')
 
-        print(f'\nSaving file to GCP bucket...')
-        utils.upload_pickle_to_gcp(bucket_name=bucket_name, filepath=f'pkl/X_pgn_matpreproc1_part_{i}.pkl', destination_blob_name=f'preprocessed_pgn/X_pgn_matpreproc1_part_{i}.pkl')
-        print(f'\nFile uploaded to GCP bucket!')
+        # print(f'\nSaving file to GCP bucket...')
+        # utils.upload_pickle_to_gcp(bucket_name=bucket_name, filepath=f'pkl/X_pgn_matpreproc1_part_{i}.pkl', destination_blob_name=f'preprocessed_pgn/X_pgn_matpreproc1_part_{i}.pkl')
+        # print(f'\nFile uploaded to GCP bucket!')
 
     # print('\nCréation de matrices en cours...')
     # start = time.time()
