@@ -943,3 +943,88 @@ def upload_pickle_to_gcp(bucket_name, filepath, destination_blob_name=None):
     blob.upload_from_filename(filepath)
 
     print(f"File {filepath} uploaded to {bucket_name}/{destination_blob_name}.")
+    
+
+def concat_pkl_files(folder_path):
+    """
+    Parcourt un dossier, charge tous les fichiers .pkl triés par leur nom, 
+    et les concatène dans un seul DataFrame.
+
+    Args:
+        folder_path (str): Le chemin vers le dossier contenant les fichiers .pkl.
+
+    Returns:
+        pd.DataFrame: Un DataFrame contenant les données concaténées.
+    """
+    # Lister tous les fichiers dans le dossier
+    files = [f for f in os.listdir(folder_path) if f.endswith('.pkl')]
+
+    # Trier les fichiers dans l'ordre croissant
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+
+    # Charger et concaténer les fichiers
+    dataframes = []
+    for file in files:
+        file_path = os.path.join(folder_path, file)
+        df = pd.read_pickle(file_path)
+        dataframes.append(df)
+
+    # Concaténer tous les DataFrames en un seul
+    final_df = pd.concat(dataframes, ignore_index=True)
+
+    return final_df
+
+
+
+def concat_pkl_files_from_bucket(source_bucket_name, source_folder, destination_bucket_name, destination_file_path):
+    """
+    Charge tous les fichiers .pkl d'un dossier dans un bucket GCP, les concatène dans un DataFrame,
+    et enregistre le DataFrame final dans un fichier .pkl dans un autre bucket.
+
+    Args:
+        source_bucket_name (str): Nom du bucket source contenant les fichiers .pkl.
+        source_folder (str): Dossier dans le bucket source où se trouvent les fichiers .pkl.
+        destination_bucket_name (str): Nom du bucket destination où sera enregistré le fichier concaténé.
+        destination_file_path (str): Chemin du fichier .pkl à enregistrer dans le bucket destination.
+    """
+    # Initialiser le client GCP Storage
+    client = storage.Client()
+
+    # Accéder au bucket source
+    source_bucket = client.bucket(source_bucket_name)
+    blobs = source_bucket.list_blobs(prefix=source_folder)
+
+    # Filtrer les fichiers .pkl et les trier
+    files = [blob for blob in blobs if blob.name.endswith('.pkl')]
+    files.sort(key=lambda x: int(x.name.split('_')[-1].split('.')[0]))
+
+    # Charger et concaténer les fichiers
+    dataframes = []
+    for blob in files:
+        # Télécharger temporairement chaque fichier pour le lire
+        temp_file_path = f"/tmp/{os.path.basename(blob.name)}"
+        blob.download_to_filename(temp_file_path)
+        
+        # Charger le fichier pickle dans un DataFrame
+        df = pd.read_pickle(temp_file_path)
+        dataframes.append(df)
+        
+        # Supprimer le fichier temporaire
+        os.remove(temp_file_path)
+
+    # Concaténer tous les DataFrames
+    final_df = pd.concat(dataframes, ignore_index=True)
+
+    # Enregistrer le DataFrame final en fichier pickle temporaire
+    temp_output_path = "/tmp/concat_result.pkl"
+    final_df.to_pickle(temp_output_path)
+
+    # Upload du fichier concaténé dans le bucket destination
+    destination_bucket = client.bucket(destination_bucket_name)
+    blob = destination_bucket.blob(destination_file_path)
+    blob.upload_from_filename(temp_output_path)
+
+    # Supprimer le fichier temporaire
+    os.remove(temp_output_path)
+
+    print(f"Fichier concaténé enregistré dans gs://{destination_bucket_name}/{destination_file_path}")
