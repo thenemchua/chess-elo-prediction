@@ -41,18 +41,18 @@ def create_matrice_from_pgn(pgn,n):
     list_epd= list_epd_per_move(pgn)
 
         # DEF PGN
-    weights={"R":[5,5,1],
-        "N":[3,3,1],
-        "B":[4,4,1],
-        "Q":[9,9,1],
-        "K":[100,100,1],
-        "P":[1,1,1],
-        "r":[-5,5,1],
-        "n":[-3,3,1],
-        "b":[-4,4,1],
-        "q":[-9,9,1],
-        "k":[-100,100,1],
-        "p":[-1,1,1]
+    weights={"R":[5,5,True],
+        "N":[3,3,True],
+        "B":[4,4,True],
+        "Q":[9,9,True],
+        "K":[100,100,True],
+        "P":[1,1,True],
+        "r":[-5,5,True],
+        "n":[-3,3,True],
+        "b":[-4,4,True],
+        "q":[-9,9,True],
+        "k":[-100,100,True],
+        "p":[-1,1,True]
         }
 
     matrice_12={"R":0,
@@ -72,7 +72,7 @@ def create_matrice_from_pgn(pgn,n):
     list_matrices=[]
 
     for epd in list_epd:
-        matrice= np.zeros((n,8,8), dtype=float)
+        matrice= np.zeros((n,8,8), dtype=bool)
         if n==1:
             for i, row in enumerate(epd):
                 k=0
