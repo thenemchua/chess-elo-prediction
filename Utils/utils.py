@@ -873,7 +873,7 @@ def pd_reconstitue_partial_parquet(input_dir, output_dir, mode):
 
 def read_parquet_from_gcloud_df(bucket_name, gcloud_path):
     """
-    Load a file from gcloud and returns a df
+    Load a parquet file from gcloud and returns a df
     
     Args:
         bucket_name (str): 
@@ -891,6 +891,31 @@ def read_parquet_from_gcloud_df(bucket_name, gcloud_path):
     
     # Load the parquet data into a DataFrame
     df = pd.read_parquet(BytesIO(data))
+    
+    print(f'df loaded from {gcloud_path}')
+    return df
+
+
+def read_pickle_from_gcloud_df(bucket_name, gcloud_path):
+    """
+    Load a pkl file from gcloud and returns a df
+    
+    Args:
+        bucket_name (str): 
+        gcloud_path (str): 
+
+    Returns:
+        returns a parquet file as a dataframe 
+    """
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(gcloud_path)
+    
+    # Read the file into memory
+    data = blob.download_as_bytes()
+    
+    # Load the parquet data into a DataFrame
+    df = pd.read_pickle(BytesIO(data))
     
     print(f'df loaded from {gcloud_path}')
     return df
