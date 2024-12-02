@@ -13,3 +13,4 @@ partial_full_data/
 evaluated_data/
 *.pkl
 *.parquet
+checkpoint/
