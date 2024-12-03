@@ -12,8 +12,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing import sequence
+from tensorflow.keras import Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, BatchNormalization,GRU,Attention
+from tensorflow.keras.layers import TimeDistributed
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -23,26 +25,144 @@ from tensorflow.keras.regularizers import l2
 
 
 
-def chatgpt_model(input_shape):
-    inputs = layers.Input(shape=input_shape)
+def init_time_distributed_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.1):
+    # Inputs
+    input_board = Input(shape=input_shape)
+    input_time = Input(shape=time_per_move_shape)
     
-    cnn = layers.TimeDistributed(models.Sequential([
-    layers.Conv3D(128, (2,2,2), input_shape=input_shape, activation="leaky_relu"),
-    layers.BatchNormalization(),
-    layers.AveragePooling3D(pool_size=(1,1,1))
-    ]))(inputs)
+    # Layer 1
+    x = TimeDistributed(layers.Conv2D(128, (2,2))(input_board))
+    # x = TimeDistributed(layers.BatchNormalization()(x))
+    x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    # x = TimeDistributed(layers.Dropout(0.2)(x))
+    x = TimeDistributed(layers.Flatten()(x))
+    x = layers.LeakyRelu(alpha=.2)(x)
     
-    lstm_out = layers.LSTM(128, return_sequences=False)(cnn)
-
-    dense_out = layers.Dense(10, activation='linear')(lstm_out)
-
-    # Construire le modèle
-    model = tf.keras.Model(inputs=inputs, outputs=dense_out)
-
-    # Compiler le modèle
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    # # Layer 2
+    # x = TimeDistributed(layers.Conv2D(64, (2,2))(x))
+    # x = TimeDistributed(layers.BatchNormalization()(x))
+    # x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    # x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    # x = TimeDistributed(layers.Conv2D(32, (2,2))(x))
+    # x = TimeDistributed(layers.BatchNormalization()(x))
+    # x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    # x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    # x = TimeDistributed(layers.Conv2D(16, (1,1))(x))
+    # x = TimeDistributed(layers.BatchNormalization()(x))
+    # x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    # x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    # Flatten CNN features
+    # x = TimeDistributed(layers.Flatten()(x))
+    
+    # Concatenate CNN features with time per move
+    # x = layers.Concatenate()([x, input_time])
+    
+    # Reshape for LSTM
+    # x = layers.Reshape((1, -1))(x)
+    
+    # LSTM Layer
+    # x = layers.LSTM(64, return_sequences=True)(x)
+    x = layers.LSTM(64, return_sequences=False)(x)
+    # x = layers.Bidirectional(layers.LSTM(128, return_sequences=True)(x))
+    # x = layers.Bidirectional(layers.LSTM(128, return_sequences=True)(x))
+    # x = layers.Dropout(.15)(x)
+    # x = layers.Bidirectional(layers.LSTM(64, return_sequences=True)(x))
+    # x = layers.Dropout(.15)(x)
+    # x = layers.BatchNormalization()(x)
+    # x = layers.Bidirectional(layers.LSTM(32, return_sequences=True)(x))
+    # x = layers.Dropout(.15)(x)
+    # x = layers.BatchNormalization()(x)
+    # x = layers.Dense(64, activation='relu')(x)
+    # x = layers.Dense(32, activation='relu')(x)
+    # x = layers.Dense(1, activation='linear')(x)
+    
+    
+    # Output layer
+    output = layers.Dense(2, activation='linear')(x)
+    
+    # Create model with multiple inputs
+    model = models.Model(
+        inputs=[input_board, input_time], 
+        outputs=output
+    )
+    
+    optimizer = optimizers.Adam(learning_rate=learning_rate)
+    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
     
     return model
+
+
+def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.1):
+    # Inputs
+    input_board = Input(shape=input_shape)
+    input_time = Input(shape=time_per_move_shape)
+    
+    # Layer 1
+    x = TimeDistributed(layers.Conv2D(128, (2,2), activation="leaky_relu")(input_board))
+    x = TimeDistributed(layers.BatchNormalization()(x))
+    x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    # Layer 2
+    x = TimeDistributed(layers.Conv2D(64, (2,2), activation="leaky_relu")(x))
+    x = TimeDistributed(layers.BatchNormalization()(x))
+    x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    x = TimeDistributed(layers.Conv2D(32, (2,2), activation="leaky_relu")(x))
+    x = TimeDistributed(layers.BatchNormalization()(x))
+    x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    x = TimeDistributed(layers.Conv2D(16, (1,1), activation="leaky_relu")(x))
+    x = TimeDistributed(layers.BatchNormalization()(x))
+    x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1))(x))
+    x = TimeDistributed(layers.Dropout(0.2)(x))
+    
+    # Flatten CNN features
+    x = TimeDistributed(layers.Flatten()(x))
+    
+    # Concatenate CNN features with time per move
+    x = layers.Concatenate()([x, input_time])
+    
+    # Reshape for LSTM
+    x = layers.Reshape((1, -1))(x)
+    
+    # LSTM Layer
+    # x = layers.LSTM(64, return_sequences=True)(x)
+    # x = layers.LSTM(64, return_sequences=False)(x)
+    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True)(x))
+    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True)(x))
+    x = layers.Dropout(.15)(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True)(x))
+    x = layers.Dropout(.15)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Bidirectional(layers.LSTM(32, return_sequences=True)(x))
+    x = layers.Dropout(.15)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dense(64, activation='relu')(x)
+    x = layers.Dense(32, activation='relu')(x)
+    x = layers.Dense(1, activation='linear')(x)
+    
+    
+    # Output layer
+    output = layers.Dense(2, activation='linear')(x)
+    
+    # Create model with multiple inputs
+    model = models.Model(
+        inputs=[input_board, input_time], 
+        outputs=output
+    )
+    
+    optimizer = optimizers.Adam(learning_rate=learning_rate)
+    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+    
+    return model
+
+
 
 
 def initialize_CNN_model(input_shape, learning_rate=0.1):
@@ -75,7 +195,7 @@ def initialize_CNN_model(input_shape, learning_rate=0.1):
 
     # Output CNN
     model.add(layers.Flatten())
-    model.add(layers.Dense(input_shape[0], activation='linear'))
+    model.add(layers.Dense(2, activation='linear'))
 
     # # LSTM
     # # model.add(layers.Flatten())
@@ -121,15 +241,17 @@ def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
     model.add(Dropout(0.15))
 
     # Output CNN
-    model.add(layers.Flatten())
-    model.add(layers.Dense(input_shape[0], activation='linear'))
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(2, activation='linear'))
 
     # # LSTM
-    # # model.add(layers.Flatten())
-    # model.add(layers.LSTM(20, return_sequences=False))
-
+    model.add(layers.Flatten())
+    model.add(layers.Reshape((1, -1)))
+    model.add(layers.LSTM(128, return_sequences=True))
+    model.add(layers.LSTM(64, return_sequences=False))
+    
     # model.add(layers.Flatten())
-    # model.add(layers.Dense(1, activation='linear'))
+    model.add(layers.Dense(2, activation='linear'))
 
     # Model Compiling
     optimizer = optimizers.Adam(learning_rate=learning_rate)
@@ -168,7 +290,7 @@ def initialize_LSTM_model(input_shape=(150,1), learning_rate=0.1):
 
     return model
 
-def train_model(model, X , y, ckp_filename, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
+def train_model(model, X , y, ckp_filename, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=None):
     """
     Fit the model and return a tuple (fitted_model, history)
     """
