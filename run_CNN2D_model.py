@@ -3,6 +3,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from Utils import utils
 import numpy as np
+import os
 
 # GCP BUCKET
 bucket_name="chess_elo_prediction_lw1812"
@@ -33,5 +34,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_pad,y)
 
 print('\nTraining model...')
 dl_models.train_model(model, X_train, y_train, ckp_filename='CNN_on_concat_pkl', epochs=27, validation_data=(X_test, y_test), patience=100)
+filepath = os.path.join('checkpoint', "CNN_on_concat_pkl_2players.model.keras")
 
+utils.upload_parquet_to_gcp(bucket_name, filepath)
 print('\nEverything done!')
