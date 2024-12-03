@@ -24,7 +24,6 @@ import pandas as pd
 from tensorflow.keras.regularizers import l2
 
 
-
 def init_time_distributed_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.1):
     # Inputs
     input_board = Input(shape=input_shape)
@@ -176,7 +175,7 @@ def initialize_CNN_model(input_shape, learning_rate=0.1):
     model.add(layers.BatchNormalization())
     model.add(layers.AveragePooling3D(pool_size=(1,1,1)))
     model.add(Dropout(0.15))
-    
+
     # Layer 2
     model.add(layers.Conv3D(64, (2,2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
@@ -196,6 +195,7 @@ def initialize_CNN_model(input_shape, learning_rate=0.1):
     # Output CNN
     model.add(layers.Flatten())
     model.add(layers.Dense(2, activation='linear'))
+
 
     # # LSTM
     # # model.add(layers.Flatten())
@@ -263,7 +263,7 @@ def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
 def initialize_LSTM_model(input_shape=(150,1), learning_rate=0.1):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
-    
+
     # model.add(layers.LSTM(20, return_sequences=True))
     # model.add(layers.LSTM(20, return_sequences=False))
     model.add(LSTM(128, return_sequences=True))
@@ -408,7 +408,7 @@ def preprocessing_baseline_francois(X,tk=None):
     X input = df incluant uniquement X["pgn_all"]
     """
     # max_len=max_len_baseline(pd.DataFrame(X))
-    max_features=max_features_baseline(pd.DataFrame(X))
+    max_features=max_features_baseline(pd.DataFrame(X)) #changement
     print(f'max_features: {max_features}')
     if tk:
         X=tk.texts_to_sequences(X)
@@ -497,3 +497,45 @@ def initialize_baseline_model_3(X,max_len=250,embedding_dim=10,dropout_rate=0.15
     # Compile the model
     model.compile(loss='mse', optimizer='adam', metrics=['mae'])
     return model
+
+def max_features_baseline_pgn(X):
+    all_pgn=[]
+    for pgn in X:
+        for ele in pgn.split(" "):
+            all_pgn.append(ele)
+    return len(set(all_pgn))
+
+
+def prepro_df_to_model_baseline_jules(df):
+
+    df["pgn_all"]=df["pgn"]
+    X = df["pgn_all"]
+    y=create_y_from_initial_data_for_baseline(df)
+
+    return X,y
+
+
+def train_LSTM_model_jules(model, X_train , y_train, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3, model_name="Test"):
+
+    """
+    Fit the model and return a tuple (fitted_model, history)
+    """
+
+
+    es = EarlyStopping(
+        monitor="val_loss",
+        patience=patience,
+        restore_best_weights=True,
+        verbose=1
+    )
+
+    checkpoint_filepath = f'checkpoint/epoch{epochs}_{model_name}.model.keras'
+    model_checkpoint_callback = ModelCheckpoint(
+        filepath=checkpoint_filepath,
+        monitor='val_mae',
+        mode='min',
+        save_best_only=True)
+
+    history, model, tk=fit_baseline_model(model,X_train,y_train,batch_size=batch_size, epochs=epochs, validation_split=validation_split, callbacks=[es,model_checkpoint_callback])
+
+    return model, history, tk
