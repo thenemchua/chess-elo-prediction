@@ -21,6 +21,8 @@ from io import BytesIO
 import chess
 import chess.pgn
 
+import tqdm
+tqdm.pandas()
 
 
 def create_game_dict():
@@ -1114,5 +1116,5 @@ def clean_illegal_games(df, column_name):
         return True
 
     # Applique la vérification à chaque ligne et filtre les lignes légales
-    legal_mask = df[column_name].apply(is_legal_game)
+    legal_mask = df[column_name].progress_apply(is_legal_game)
     return df[legal_mask].reset_index(drop=True)
