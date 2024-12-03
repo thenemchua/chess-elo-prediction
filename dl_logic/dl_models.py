@@ -393,7 +393,7 @@ def prepro_df_to_model_baseline_jules(df):
     return X,y
 
 
-def train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3):
+def train_LSTM_model_jules(model, X_train , y_train, epochs=100, batch_size=32, patience=2, validation_data=None, validation_split=0.3, model_name="Test"):
 
     """
     Fit the model and return a tuple (fitted_model, history)
@@ -407,7 +407,7 @@ def train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=100, batch_size=
         verbose=1
     )
 
-    checkpoint_filepath = 'checkpoint/CNN_LSTM.model.keras'
+    checkpoint_filepath = f'checkpoint/epoch{epochs}_{model_name}.model.keras'
     model_checkpoint_callback = ModelCheckpoint(
         filepath=checkpoint_filepath,
         monitor='val_mae',

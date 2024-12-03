@@ -3,6 +3,7 @@ from model.model import forecast
 from tensorflow import keras
 from Utils import preprocessing
 from Utils import matrix_creation
+from Utils import utils
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 
@@ -13,20 +14,20 @@ app = FastAPI()
 # first endpoint
 @app.get("/")
 def status():
-    return {"API": "connected"}
+    return {"API": "connected, test francois"}
 
 @app.get("/predict")
 def predict(X):
 
-    X=preprocessing.pgn_from_chess_com(X)
-    df=pd.DataFrame({"pgn" : [X]})
+    # X=preprocessing.extract_moves_chess(X)
+    # df=pd.DataFrame({"pgn" : [X]})
 
-    df=df.pgn.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
+    # df=df.pgn.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
 
-    X_pad = pad_sequences(df, padding='post',maxlen=150, dtype= "int64")
+    # X_pad = pad_sequences(df, padding='post',maxlen=150, dtype= "int64")
 
-    model= keras.models.load_model("gs://chess_elo_prediction_lw1812/models/CNN_for_test_1288.keras")
+    model= utils.load_model_gcp()
 
-    prediction=model.predict(X_pad)[0][0]
+    # prediction=model.predict(X_pad)[0][0]
 
-    return {'forecast': prediction}
+    return {"test":model.summary()}
