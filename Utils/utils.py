@@ -21,7 +21,7 @@ from io import BytesIO
 import chess
 import chess.pgn
 
-import tqdm
+from tqdm import tqdm
 tqdm.pandas()
 from tensorflow import keras
 
