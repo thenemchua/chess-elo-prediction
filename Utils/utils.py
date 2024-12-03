@@ -18,6 +18,11 @@ from Utils import preprocessing
 
 from io import BytesIO
 
+import chess
+import chess.pgn
+
+import tqdm
+tqdm.pandas()
 from tensorflow import keras
 
 
@@ -1060,3 +1065,86 @@ def concat_pkl_files_from_bucket(source_bucket_name, source_folder, destination_
 
     print(f"Fichier concaténé enregistré dans gs://{destination_bucket_name}/{destination_file_path}")
 
+
+def upload_parquet_to_gcp(bucket_name, filepath, destination_blob_name=None):
+    """
+    Upload a pickle file to Google Cloud Storage.
+
+    Args:
+        bucket_name (str): The name of the GCP bucket.
+        filepath (str): The local path to the pickle file.
+        destination_blob_name (str, optional): The destination path in the bucket. Defaults to the file name.
+    """
+    if destination_blob_name is None:
+        destination_blob_name = filepath.split("/")[-1]
+
+    client = storage.Client()
+
+    # Get the bucket
+    bucket = client.get_bucket(bucket_name)
+
+    # Upload the file
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(filepath)
+
+    print(f"File {filepath} uploaded to {bucket_name}/{destination_blob_name}.")
+
+
+def verify_legal_moves(moves):
+    """
+    Vérifie si une liste de coups est légale à partir de la position initiale.
+    
+    Args:
+    - moves (str): Une chaîne de caractères représentant les coups en notation algébrique simplifiée.
+
+    Returns:
+    - bool: True si tous les coups sont légaux, False sinon.
+    - str: Un message indiquant le premier coup illégal ou confirmant la légalité.
+    """
+    # Initialisation de l'échiquier
+    board = chess.Board()
+    
+    # Diviser les coups par espaces
+    move_list = moves.split()
+    
+    for move in move_list:
+        try:
+            # Appliquer le coup
+            parsed_move = board.parse_san(move)
+            board.push(parsed_move)
+        except ValueError:
+            # Coup illégal détecté
+            return False
+    
+    return True
+
+
+def clean_illegal_games(df, column_name):
+    """
+    Parcours un dataframe pour vérifier les coups d'échecs.
+    Supprime les lignes contenant des coups illégaux ou des données vides.
+    
+    Args:
+    - df (pd.DataFrame): Le dataframe contenant les parties d'échecs.
+    - column_name (str): Le nom de la colonne contenant les coups d'échecs.
+
+    Returns:
+    - pd.DataFrame: Un dataframe nettoyé sans lignes illégales ou vides.
+    """
+    def is_legal_game(moves):
+        # Vérifie si une chaîne de coups est légale
+        if not isinstance(moves, str) or not moves.strip():
+            return False  # Ligne vide ou invalide
+        
+        board = chess.Board()
+        for move in moves.split():
+            try:
+                parsed_move = board.parse_san(move)
+                board.push(parsed_move)
+            except ValueError:
+                return False  # Coup illégal
+        return True
+
+    # Applique la vérification à chaque ligne et filtre les lignes légales
+    legal_mask = df[column_name].progress_apply(is_legal_game)
+    return df[legal_mask].reset_index(drop=True)
