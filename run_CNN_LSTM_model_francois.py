@@ -13,15 +13,15 @@ pkl_df = utils.read_pickle_from_gcloud_df(bucket_name, gcloud_path="full-data/co
 full_df = utils.read_parquet_from_gcloud_df(bucket_name, gcloud_path="full-data/cleaned_full_blitz_50000.parquet")
 print('\nData loaded !')
 
-time = full_df.loc[0:9682].time_per_move
+time = full_df.loc[0:400000].time_per_move
 time_pad = pad_sequences(time, padding='post', maxlen=150, dtype='float')
 
 print('\nCreating X and y...')
 X = pkl_df.copy()
-X = X.pgn
+X = X.loc[0:400000].pgn
 
 X_pad = pad_sequences(X, padding='post',maxlen=150, dtype= "int8")
-y = full_df.loc[0:9682].white_rating
+y = full_df.loc[0:400000].white_rating
 print('\nX,y initialized!')
 
 reshaped_time = time_pad.reshape(time_pad.shape[0], time_pad.shape[1], 1)
