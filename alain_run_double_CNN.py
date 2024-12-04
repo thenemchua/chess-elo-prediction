@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 # # GCP BUCKET
-bucket_name="chessbucket1812"
+bucket_name="chess_elo_prediction_lw1812"
 
 # Loading data from GCP
 print('Loading data from GCP...')
