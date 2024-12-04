@@ -21,7 +21,7 @@ X = pkl_df.copy()
 X = X.pgn
 
 X_pad = pad_sequences(X, padding='post',maxlen=150, dtype= "int8")
-y = full_df.loc[0:9682][['white_rating', 'black_rating']].values
+y = full_df.loc[0:9682].white_rating
 print('\nX,y initialized!')
 
 reshaped_time = time_pad.reshape(time_pad.shape[0], time_pad.shape[1], 1)
