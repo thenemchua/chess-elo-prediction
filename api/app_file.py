@@ -6,6 +6,7 @@ from Utils import matrix_creation
 from Utils import utils
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
+import numpy as np
 
 
 app = FastAPI()
@@ -19,15 +20,14 @@ def status():
 @app.get("/predict")
 def predict(X):
 
-    # X=preprocessing.extract_moves_chess(X)
-    # df=pd.DataFrame({"pgn" : [X]})
-
-    # df=df.pgn.apply(lambda x: matrix_creation.create_matrice_from_pgn(x,12))
-
-    # X_pad = pad_sequences(df, padding='post',maxlen=150, dtype= "int64")
+    pgn=preprocessing.extract_moves_chess(X)
+    X = matrix_creation.create_matrice_from_pgn(pgn, 1)
+    X  = X + [np.zeros((8,8))] * (150-len(X))
+    X=np.array(X).reshape(-1, 150, 8, 8)
 
     model= utils.load_model_gcp()
 
-    # prediction=model.predict(X_pad)[0][0]
+    white=int(model.predict(X)[0][0])
+    black=int(model.predict(X)[0][1])
 
-    return {"test":model.summary()}
+    return {"white":white,"black":black}
