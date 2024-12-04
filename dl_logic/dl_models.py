@@ -24,6 +24,7 @@ import pandas as pd
 from tensorflow.keras.regularizers import l2
 
 
+
 def init_time_distributed_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.1):
     # Inputs
     # input_board = Input(shape=input_shape)
@@ -53,8 +54,10 @@ def init_time_distributed_cnn_lstm(input_shape, time_per_move_shape, learning_ra
     x = layers.TimeDistributed(layers.AveragePooling2D((1, 1)))(x)
     x = layers.TimeDistributed(layers.Dropout(0.25))(x)
 
-    # Flatten and LSTM
-    x = layers.TimeDistributed(layers.Flatten())(x)
+
+#     # Flatten and LSTM
+#     x = layers.TimeDistributed(layers.Flatten())(x)
+
 
     x = layers.Concatenate()([x, input_time])
 
@@ -64,15 +67,18 @@ def init_time_distributed_cnn_lstm(input_shape, time_per_move_shape, learning_ra
     x = layers.LSTM(64, return_sequences=True)(x)
     x = layers.LSTM(64, return_sequences=False)(x)
 
-    # Output
-    output_layer = layers.Dense(2)(x)
 
-    # Model definition
-    model = models.Model(inputs=input_layer, outputs=output_layer)
+#     # Output
+#     output_layer = layers.Dense(2)(x)
+
+#     # Model definition
+#     model = models.Model(inputs=input_layer, outputs=output_layer)
+
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
     return model
+
 
 
 def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.01):
@@ -112,7 +118,11 @@ def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.01):
 
     # LSTM Layers
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
+
+    x = layers.Dense(32, activation='relu')(x)
+    x = layers.Dense(16, activation='relu')(x)
     x = layers.Bidirectional(layers.LSTM(32, return_sequences=False))(x)
+    x = layers.Dropout(0.2)(x)
 
     # Output layer
     output = layers.Dense(1, activation='linear')(x)
@@ -278,17 +288,9 @@ def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
     model.add(Dropout(0.15))
 
     # Output CNN
-    # model.add(layers.Flatten())
-    # model.add(layers.Dense(2, activation='linear'))
-
-    # # LSTM
     model.add(layers.Flatten())
-    model.add(layers.Reshape((1, -1)))
-    model.add(layers.LSTM(128, return_sequences=True))
-    model.add(layers.LSTM(64, return_sequences=False))
 
-    # model.add(layers.Flatten())
-    model.add(layers.Dense(1, activation='linear'))
+    model.add(layers.Dense(2, activation='linear'))
 
     # Model Compiling
     optimizer = optimizers.Adam(learning_rate=learning_rate)

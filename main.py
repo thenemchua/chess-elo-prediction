@@ -14,22 +14,22 @@ import os
 if __name__ == "__main__":
 
     bucket_name="chess_elo_prediction_lw1812"
-    gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
-    output_dir = "cleaned_data"
-    # # gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
+    # gcloud_filepath="pgn_time_increment_rating_data/full_evaluated_blitz_50000.parquet"
+    # output_dir = "cleaned_data"
+    # # # gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
     
-    df = utils.read_parquet_from_gcloud_df(bucket_name, gcloud_filepath)
-    cleaned_df = utils.clean_illegal_games(df, "pgn")
+    # df = utils.read_parquet_from_gcloud_df(bucket_name, gcloud_filepath)
+    # cleaned_df = utils.clean_illegal_games(df, "pgn")
     
-    # Création du répertoire de sortie s'il n'existe pas
-    os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join(output_dir, "cleaned_full_evaluated_blitz_50000.parquet")
-    cleaned_df.to_parquet(filepath)
-    print("saved df")
+    # # Création du répertoire de sortie s'il n'existe pas
+    # os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join('checkpoint', "CNN_on_concat_pkl.model.keras")
+    # cleaned_df.to_parquet(filepath)
+    # print("saved df")
     
     
     utils.upload_parquet_to_gcp(bucket_name, filepath)
-    print("uploaded to gcp")
+    # print("uploaded to gcp")
     
     # utils.upload_pickle_to_gcp(bucket_name, "pkl/X_matriced.pickle", "")
     # source_folder = "preprocessed_pgn"
