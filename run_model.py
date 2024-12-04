@@ -1,10 +1,10 @@
 from Utils import utils
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+# from sklearn.model_selection import train_test_split
+# from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import os
 
-from dl_logic import dl_models
+# from dl_logic import dl_models
 from Utils import matrix_creation
 import time
 from tqdm import tqdm
@@ -13,7 +13,7 @@ tqdm.pandas()
 if __name__ == "__main__":
 
     bucket_name="chess_elo_prediction_lw1812"
-    gcloud_filepath="pgn_time_increment_rating_data/cleaned_full_blitz_50000.parquet"
+    gcloud_filepath="full_data/cleaned_full_evaluated_blitz_50000.parquet"
     # gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
     output_dir = 'matrix_50000'
     
@@ -53,12 +53,13 @@ if __name__ == "__main__":
         save_X = pd.DataFrame(tmp_X)
         print(f'\n df converted')
         os.makedirs('pkl', exist_ok=True)
-        save_X.to_pickle(f'pkl/X_pgn_matpreproc1_part_{i}.pkl')
+        filename = f'final_X_pgn_matpreproc1_part_{i}.pkl'
+        save_X.to_pickle(f'pkl/{filename}')
         # save_X.to_parquet(f'pkl/X_pgn_matpreproc1_part_{i}.parquet')
         print(f'df saved to a pickle file')
 
         print(f'\nSaving file to GCP bucket...')
-        utils.upload_pickle_to_gcp(bucket_name=bucket_name, filepath=f'pkl/X_pgn_matpreproc1_part_{i}.pkl', destination_blob_name=f'preprocessed_pgn/X_pgn_matpreproc1_part_{i}.pkl')
+        utils.upload_pickle_to_gcp(bucket_name=bucket_name, filepath=f'pkl/{filename}', destination_blob_name=f'new_preprocessed_pgn/{filename}')
         print(f'\nFile uploaded to GCP bucket!')
 
     # print('\nCréation de matrices en cours...')
