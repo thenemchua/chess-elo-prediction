@@ -3,6 +3,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from Utils import utils
 import numpy as np
+import os
 
 # GCP BUCKET
 bucket_name="chess-elo"
@@ -28,9 +29,8 @@ reshaped_time = time_pad.reshape(time_pad.shape[0], time_pad.shape[1], 1)
 
 cnn_lstm = dl_models.init_cnn_lstm(input_shape=(8, 8, 1), time_per_move_shape=(1,))
 
-cnn_lstm.fit(
-    [X_pad, reshaped_time],
-    y,
-    epochs=10,
-    validation_split=.2
-)
+print('\nTraining model...')
+dl_models.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl', epochs=15, validation_split=.2, patience=10)
+
+
+print('\nEverything done!')
