@@ -31,7 +31,7 @@ cnn_lstm = dl_models.init_cnn_lstm(input_shape=(8, 8, 1), time_per_move_shape=(1
 
 print('\nTraining model...')
 dl_models.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl', epochs=27, validation_split=.2, patience=100)
-filepath = os.path.join('checkpoint', "new_cnn_lstm_on_concat_result_pkl_2players.model.keras")
+filepath = os.path.join('checkpoint', "alain_new_cnn_lstm_on_concat_result_pkl_2players.model.keras")
 utils.upload_parquet_to_gcp(bucket_name, filepath)
 
 print('\nEverything done!')

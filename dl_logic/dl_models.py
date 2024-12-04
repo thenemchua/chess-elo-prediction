@@ -111,9 +111,10 @@ def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.01):
     x = layers.Concatenate()([x, input_time])
    
     # LSTM Layers
-    # x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
-    x = layers.Bidirectional(layers.LSTM(32, return_sequences=False))(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
     x = layers.Dense(32, activation='relu')(x)
+    x = layers.Dense(16, activation='relu')(x)
+    x = layers.Bidirectional(layers.LSTM(32, return_sequences=False))(x)
     x = layers.Dropout(0.2)(x)
    
     # Output layer
