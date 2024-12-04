@@ -89,66 +89,68 @@ def initialize_double_CNN(input_shape, time_per_move_shape, learning_rate=0.01):
     return model
 
 
-def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.01): 
+
+def init_cnn_lstm(input_shape, time_per_move_shape, learning_rate=0.01):
     # Inputs
     input_board = Input(shape=(None,) + input_shape)  # Variable number of games/sequences
     input_time = Input(shape=(None,) + time_per_move_shape)  # Time per move
-   
+
     # Layer 1
     x = TimeDistributed(layers.Conv2D(128, (2,2), activation="leaky_relu"))(input_board)
     x = TimeDistributed(layers.BatchNormalization())(x)
     x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1)))(x)
     x = TimeDistributed(layers.Dropout(0.2))(x)
-   
+
     # Layer 2
     x = TimeDistributed(layers.Conv2D(64, (2,2), activation="leaky_relu"))(x)
     x = TimeDistributed(layers.BatchNormalization())(x)
     x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1)))(x)
     x = TimeDistributed(layers.Dropout(0.2))(x)
-   
+
     # Layer 3
     x = TimeDistributed(layers.Conv2D(32, (2,2), activation="leaky_relu"))(x)
     x = TimeDistributed(layers.BatchNormalization())(x)
     x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1)))(x)
     x = TimeDistributed(layers.Dropout(0.2))(x)
-   
+
     # Layer 4
     x = TimeDistributed(layers.Conv2D(16, (1,1), activation="leaky_relu"))(x)
     x = TimeDistributed(layers.BatchNormalization())(x)
     x = TimeDistributed(layers.AveragePooling2D(pool_size=(1,1)))(x)
     x = TimeDistributed(layers.Dropout(0.2))(x)
-   
+
     # Flatten CNN features
     x = TimeDistributed(layers.Flatten())(x)
-   
+
     # Concatenate CNN features with time per move
     x = layers.Concatenate()([x, input_time])
    
     # Masking to ignore padding values
     x = Masking(mask_value=0)(x)
-   
+
     # LSTM Layers
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
+
     x = layers.Dense(32, activation='relu')(x)
     x = layers.Dense(16, activation='relu')(x)
     x = layers.Bidirectional(layers.LSTM(32, return_sequences=False))(x)
     x = layers.Dropout(0.2)(x)
-   
+
     # Output layer
-    output = layers.Dense(2, activation='linear')(x)
-   
+    output = layers.Dense(1, activation='linear')(x)
+
     # Create model with multiple inputs
     model = models.Model(
         inputs=[input_board, input_time],
         outputs=output
     )
-   
+
     optimizer = optimizers.Adam(learning_rate=learning_rate)
     model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
-   
+
     return model
 
-
+  
 def initialize_CNN_model(input_shape, learning_rate=0.1):
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
@@ -200,7 +202,7 @@ def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
     model.add(layers.BatchNormalization())
     model.add(layers.AveragePooling2D(pool_size=(1,1)))
     model.add(Dropout(0.15))
-    
+
     # Layer 2
     model.add(layers.Conv2D(64, (2,2), activation="leaky_relu"))
     model.add(layers.BatchNormalization())
@@ -219,6 +221,7 @@ def initialize_CNN_2D_model(input_shape, learning_rate=0.1):
 
     # Output CNN
     model.add(layers.Flatten())
+
     model.add(layers.Dense(2, activation='linear'))
 
     # Model Compiling
