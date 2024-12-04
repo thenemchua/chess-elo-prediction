@@ -23,19 +23,19 @@ if __name__ == "__main__":
     
     # # Création du répertoire de sortie s'il n'existe pas
     # os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join('checkpoint', "CNN_on_concat_pkl.model.keras")
+    # filepath = os.path.join('checkpoint', "CNN_on_concat_pkl.model.keras")
     # cleaned_df.to_parquet(filepath)
     # print("saved df")
     
     
-    utils.upload_parquet_to_gcp(bucket_name, filepath)
+    # utils.upload_parquet_to_gcp(bucket_name, filepath)
     # print("uploaded to gcp")
     
     # utils.upload_pickle_to_gcp(bucket_name, "pkl/X_matriced.pickle", "")
-    # source_folder = "preprocessed_pgn"
+    source_folder = "new_preprocessed_pgn"
     # destination_bucket_name = "mon-bucket-destination"
-    # destination_file_path = "preprocessed_pgn/concat_result.pkl"
+    destination_file_path = "new_preprocessed_pgn/onemillion_concat_result.pkl"
 
-    # utils.concat_pkl_files_from_bucket(bucket_name, source_folder, bucket_name, destination_file_path)
+    utils.concat_pkl_files_from_bucket(bucket_name, source_folder, bucket_name, destination_file_path)
 
     print('\nOpération terminée')
