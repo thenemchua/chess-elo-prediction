@@ -136,18 +136,26 @@ def extract_moves_and_times_pgn_2(df):
     df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
     return df
 
-def pgn_from_chess_com(pgn):
-    """
-    Input = pgn provenant de chess.com
-    Permet de préprocesser le pgn provenant directement de chess.com
-    """
-    # Extraire les lignes de mouvements et les nettoyer
-    moves = ' '.join(line for line in pgn.split('\n') if not line.startswith('[')).strip()
-    # Supprimer les numéros de coups (ex : "1.", "2.")
-    moves = re.sub(r'\d+\.\s*', '', moves)
-    # Supprimer le résultat à la fin (0-1, 1-0, ou 1/2-1/2), s'il existe
-    moves = re.sub(r'\s?(0-1|1-0|1/2-1/2)\s?$', '', moves[:-1])
-    return moves.strip()
+def extract_moves_chess(pgn):
+    # Extract the moves section (after metadata)
+    moves_section = re.search(r"1\..*", pgn).group()
+
+    # Remove move numbers (e.g., "1.", "2.", etc.)
+    cleaned_moves = re.sub(r"\d+\.", "", moves_section)
+
+    # Split into a list of moves
+    moves = cleaned_moves.split()
+
+    # Remove non-move entries (e.g., result {1-0}, {0-1}, {1/2-1/2})
+    filtered_moves = [move for move in moves if not re.match(r"[{}]", move)]
+
+    # Join the moves back into a single string
+    result = " ".join(filtered_moves).strip()
+
+    # Remove any remaining '{' or '}' characters in the final string
+    result = result.replace("{", "").replace("}", "")
+
+    return result
 
 def pgn_from_lichess(pgn):
     """
