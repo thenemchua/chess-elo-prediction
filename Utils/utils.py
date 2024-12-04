@@ -25,6 +25,7 @@ from tqdm import tqdm
 tqdm.pandas()
 from tensorflow import keras
 
+import logging
 
 def create_game_dict():
     '''
@@ -1023,6 +1024,15 @@ def concat_pkl_files_from_bucket(source_bucket_name, source_folder, destination_
         destination_bucket_name (str): Nom du bucket destination où sera enregistré le fichier concaténé.
         destination_file_path (str): Chemin du fichier .pkl à enregistrer dans le bucket destination.
     """
+    logging.basicConfig(
+        level=logging.INFO,  # Niveau de base : INFO (vous pouvez ajuster selon vos besoins)
+        format='%(asctime)s - %(levelname)s - %(message)s',  # Format du message
+        handlers=[
+            logging.StreamHandler()  # Afficher dans la console
+        ]
+    )
+
+    
     # Initialiser le client GCP Storage
     client = storage.Client()
 
@@ -1040,6 +1050,7 @@ def concat_pkl_files_from_bucket(source_bucket_name, source_folder, destination_
         # Télécharger temporairement chaque fichier pour le lire
         temp_file_path = f"/tmp/{os.path.basename(blob.name)}"
         blob.download_to_filename(temp_file_path)
+        logging.info(f"Traitement de {temp_file_path}")
         
         # Charger le fichier pickle dans un DataFrame
         df = pd.read_pickle(temp_file_path)
