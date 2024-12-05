@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from Utils import utils
 import numpy as np
 import os
+from tensorflow import keras
 
 # GCP BUCKET
 bucket_name="chess-elo"
@@ -30,10 +31,13 @@ print('\nX,y initialized!')
 
 reshaped_time = time_pad.reshape(time_pad.shape[0], time_pad.shape[1], 1)
 
-cnn_lstm = dl_models.init_cnn_lstm(input_shape=(8, 8, 1), time_per_move_shape=(1,))
+# cnn_lstm = dl_models.init_cnn_lstm(input_shape=(8, 8, 1), time_per_move_shape=(1,))
+cnn_lstm = keras.models.load_model("checkpoint/new_cnn_lstm_on_concat_result_pkl.model.keras")
 
 print('\nTraining model...')
-dl_models.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl', epochs=15, validation_split=.2, patience=10)
-
+dl_models.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl_2', epochs=15, validation_split=.2, patience=10)
+bucket_name="chess-elo"
+filepath = os.path.join('checkpoint', "new_cnn_lstm_on_concat_result_pkl_2.model.keras")
+utils.upload_parquet_to_gcp(bucket_name, filepath,"models/cnn_lstm.model_2.keras")
 
 print('\nEverything done!')
