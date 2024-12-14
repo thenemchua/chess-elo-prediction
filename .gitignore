@@ -15,4 +15,4 @@ evaluated_data/
 *.parquet
 checkpoint/
 .env.yaml
-
+model/
