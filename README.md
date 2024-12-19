@@ -1,6 +1,6 @@
 # Chess elo prediction project
 
-Le Wagon - Data Science and AI bootcamp - batch 1812
+Le Wagon - Data Science and AI bootcamp - batch 1812 n/
 Project contributors: Alain Lim, Jules Saint-André, Nicolas Juul, François Didden
 
 This project was the final delivery of a 9-week full-time intensive bootcamp focused on learning Data Science with Python.
