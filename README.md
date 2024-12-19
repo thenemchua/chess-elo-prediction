@@ -12,7 +12,7 @@ This project was the final delivery of a 9-week full-time intensive bootcamp foc
 
 The objective of the project was to be able to predict the elo scores of white and black players in a unique chess game.
 
-Not all games are played at the same level and players needs to know there instant level played to challenge themselves. 
+Not all games are played at the same level and players need to know there instant level played to challenge themselves. 
 
 Tools already exist but unfortunately they are related to a specific platform or website such as chess.com.
 
