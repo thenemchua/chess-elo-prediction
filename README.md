@@ -16,7 +16,7 @@ Not all games are played at the same level and players need to know there instan
 
 Tools already exist but unfortunately they are related to a specific platform or website such as chess.com.
 
-Here the goal was to be evaluate any type of game with the same methodology and be able to compare and evaluate progress over time.
+Here the goal was to evaluate any type of game with the same methodology and be able to compare and evaluate progress over time.
 
 ### Dataset
 
