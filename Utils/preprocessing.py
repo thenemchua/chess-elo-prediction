@@ -3,6 +3,8 @@ import re
 import datetime
 import numpy as np
 from Utils import utils
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 def extract_opening(df):
     df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
@@ -120,22 +122,6 @@ def extract_moves_and_times_pgn(df):
     return df
 
 
-def extract_moves_and_times_pgn_2(df):
-    """
-    Input = df de base venant du fichier .json
-    Permet de créer les colonnes time_control, increment, pgn_all, pgn_w, pgn_b, times_all, times_w, times_b
-    """
-    df["time_control"]=df["pgn"].apply(lambda x: func_time_control(x))
-    df["increment"]=df["pgn"].apply(lambda x: func_increment(x))
-    df["pgn_all"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[0]))
-    df["pgn_w"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[1]))
-    df["pgn_b"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[2]))
-    df["times_all"]=df["pgn"].apply(lambda x: times_per_color(x)[0])
-    df["times_w"]=df["pgn"].apply(lambda x: times_per_color(x)[1])
-    df["times_b"]=df["pgn"].apply(lambda x: times_per_color(x)[2])
-    df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
-    return df
-
 def extract_moves_chess(pgn):
     # Extract the moves section (after metadata)
     moves_section = re.search(r"1\..*", pgn).group()
@@ -157,15 +143,102 @@ def extract_moves_chess(pgn):
 
     return result
 
-def pgn_from_lichess(pgn):
+
+# Preprocessing pour baseline
+
+def create_X_from_initial_data_for_baseline(df):
     """
-    Input = pgn provenant de lichess
-    Permet de préprocesser le pgn brute provenant directement de lichess
+    Crée X à partir de la donnée de base.
+    X: le pgn global en format string, chaque coup séparé par un espace vide.
+
     """
-    # Extraire les lignes de mouvements et les nettoyer
-    moves = ' '.join(line for line in pgn.split('\n') if not line.startswith('[')).strip()
-    # Supprimer les numéros de coups (ex : "1.", "2.")
-    moves = re.sub(r'\d+\.\s*', '', moves)
-    # # Supprimer le résultat à la fin (0-1, 1-0, ou 1/2-1/2), s'il existe
-    moves = re.sub(r'\s?(0-1|1-0|1/2-1/2)\s?$', '', moves)
-    return moves.strip()
+    df=extract_moves_and_times_pgn(df)
+    X = df[["pgn_all"]]
+    X= X["pgn_all"].apply(lambda x: " ".join(x))
+    return X
+
+def create_y_from_initial_data_for_baseline(df):
+    """
+    Crée y à partir de la donnée de base.
+    y: le rating de white.
+    """
+    y=df[["white_rating"]]
+    return y
+
+def tokeniser_pgn(x, max_features):
+    """
+    Permet de tokeniser x, x étant en entrée un df contenant les pgn en format str avec un espace vide entre chaque coup joué.
+    """
+
+    tk = Tokenizer(num_words=max_features, filters=".,",oov_token=-1)
+    tk.fit_on_texts(x)
+    vocab_size = len(tk.word_index)
+    print(f'There are {vocab_size} different words in your corpus')
+    X_token = tk.texts_to_sequences(x)
+    return X_token, tk
+
+def pad_sequence_X(x_token, maxlen):
+    """
+    Transforme tous les X pour avoir la même taille
+    """
+    X = sequence.pad_sequences(x_token, maxlen=maxlen)
+    return X
+
+def max_len_baseline(X):
+    all_list_pgn=[]
+    for pgn in X["pgn_all"]:
+        all_list_pgn.append(len(pgn))
+    return max(all_list_pgn)
+
+def max_features_baseline(X):
+    all_pgn=[]
+    for pgn in X["pgn_all"]:
+        for ele in pgn.split(" "):
+            all_pgn.append(ele)
+    return len(set(all_pgn))
+
+def preprocessing_baseline_francois(X,tk=None):
+    """
+    X input = df incluant uniquement X["pgn_all"]
+    """
+    # max_len=max_len_baseline(pd.DataFrame(X))
+    max_features=max_features_baseline(pd.DataFrame(X)) #changement
+    print(f'max_features: {max_features}')
+    if tk:
+        X=tk.texts_to_sequences(X)
+        print("Use tk already fitted")
+    else:
+        X,tk=tokeniser_pgn(X,max_features)
+    X=pad_sequence_X(X, 250)
+    return X,tk
+
+
+def prepro_df_to_model_baseline_jules(df):
+
+    df["pgn_all"]=df["pgn"]
+    X = df["pgn_all"]
+    y=create_y_from_initial_data_for_baseline(df)
+
+    return X,y
+
+
+
+****
+*****
+DELETE?
+
+def extract_moves_and_times_pgn_2(df):
+    """
+    Input = df de base venant du fichier .json
+    Permet de créer les colonnes time_control, increment, pgn_all, pgn_w, pgn_b, times_all, times_w, times_b
+    """
+    df["time_control"]=df["pgn"].apply(lambda x: func_time_control(x))
+    df["increment"]=df["pgn"].apply(lambda x: func_increment(x))
+    df["pgn_all"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[0]))
+    df["pgn_w"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[1]))
+    df["pgn_b"]=df["pgn"].apply(lambda x: " ".join(pgn_per_color(x)[2]))
+    df["times_all"]=df["pgn"].apply(lambda x: times_per_color(x)[0])
+    df["times_w"]=df["pgn"].apply(lambda x: times_per_color(x)[1])
+    df["times_b"]=df["pgn"].apply(lambda x: times_per_color(x)[2])
+    df["opening"] = df["opening"].str.extract(r'openings/([^\.]+)')
+    return df

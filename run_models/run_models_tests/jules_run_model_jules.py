@@ -4,7 +4,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import os
 
-from dl_logic import dl_models
+from dl_logic import dl_models_final
 from Utils import matrix_creation
 import time
 
@@ -18,16 +18,16 @@ if __name__ == "__main__":
     print('Reading file from gcp...')
 
     df = utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
-    X,y = dl_models.prepro_df_to_model_baseline_jules(df)
+    X,y = dl_models_final.prepro_df_to_model_baseline_jules(df)
 
     print('\nX,y initialized!')
 
     print('\nInitializing model...')
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
-    model= dl_models.initialize_baseline_model_3(X_train,embedding_dim=10,dropout_rate=0.25)
+    model= dl_models_final.initialize_baseline_model_3(X_train,embedding_dim=10,dropout_rate=0.25)
     print('\nModel initialized')
 
     print('\nTraining model...')
-    model, history = dl_models.train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=6, batch_size=32, patience=6, validation_data=None, validation_split=0.2)
+    model, history = dl_models_final.train_CNN_LSTM_model_jules(model, X_train , y_train, epochs=6, batch_size=32, patience=6, validation_data=None, validation_split=0.2)
 
     print('\nOpération terminée')

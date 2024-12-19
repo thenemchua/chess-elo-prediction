@@ -4,7 +4,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import os
 
-from dl_logic import dl_models
+from dl_logic import dl_models_final
 from Utils import matrix_creation
 import time
 from tqdm import tqdm
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     gcloud_filepath="pgn_time_increment_rating_data/cleaned_full_blitz_50000.parquet"
     # gcloud_filepath = 'full_data/evaluated_blitz_50.parquet'
     output_dir = 'matrix_50000'
-    
+
 
     print('Reading file from gcp...')
 
@@ -34,10 +34,10 @@ if __name__ == "__main__":
     num_parts = 140 # Segmentation en num_parts parties
     total_entries = len(X)  # Chaque sous-liste doit avoir la même longueur
     chunk_size = total_entries // num_parts
-    
+
     # Crée le dossier s'il n'existe pas
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Segmenter les données pour chaque mode
     for i in range(num_parts):
         start_idx = i * chunk_size

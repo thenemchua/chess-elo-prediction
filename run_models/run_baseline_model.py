@@ -6,7 +6,7 @@ import os
 from tensorflow.keras.callbacks import EarlyStopping
 
 
-from dl_logic import dl_models
+from dl_logic import dl_models_final
 from Utils import matrix_creation
 import time
 from tqdm import tqdm
@@ -23,16 +23,16 @@ if __name__ == "__main__":
     df=utils.read_parquet_from_gcloud_df(bucket_name,gcloud_filepath)
     X = df[["pgn"]]
     # X = dl_models.create_X_from_initial_data_for_baseline(df)
-    y=dl_models.create_y_from_initial_data_for_baseline(df)
+    y=dl_models_final.create_y_from_initial_data_for_baseline(df)
 
     print('\nX,y initialized!')
 
     print('\nInitializing model...')
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
-    model= dl_models.initialize_baseline_model_3(X_train,embedding_dim=10,dropout_rate=0.25)
+    model= dl_models_final.initialize_baseline_model_3(X_train,embedding_dim=10,dropout_rate=0.25)
     print('\nModel initialized')
-    
+
     print('\nTraining model...')
-    model, history = dl_models.train_CNN_LSTM_model(model, X_train, y_train, 'baseline_model_50000', 10)
+    model, history = dl_models_final.train_CNN_LSTM_model(model, X_train, y_train, 'baseline_model_50000', 10)
 
     print('\nOpération terminée')

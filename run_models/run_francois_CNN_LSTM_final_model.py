@@ -1,4 +1,4 @@
-from dl_logic import dl_models
+from dl_logic import dl_models_final
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from Utils import utils
@@ -35,7 +35,7 @@ reshaped_time = time_pad.reshape(time_pad.shape[0], time_pad.shape[1], 1)
 cnn_lstm = keras.models.load_model("checkpoint/new_cnn_lstm_on_concat_result_pkl.model.keras")
 
 print('\nTraining model...')
-dl_models.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl_2', epochs=15, validation_split=.2, patience=10)
+dl_models_final.train_model(cnn_lstm, [X_pad, time_pad], y, ckp_filename='new_cnn_lstm_on_concat_result_pkl_2', epochs=15, validation_split=.2, patience=10)
 bucket_name="chess-elo"
 filepath = os.path.join('checkpoint', "new_cnn_lstm_on_concat_result_pkl_2.model.keras")
 utils.upload_parquet_to_gcp(bucket_name, filepath,"models/cnn_lstm.model_2.keras")
