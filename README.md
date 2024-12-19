@@ -8,7 +8,7 @@ This project was the final delivery of a 9-week full-time intensive bootcamp foc
 
 -----------------
 
-##Object: Predict elo scores of 2 players in a given chess game
+## Object: Predict elo scores of 2 players in a given chess game
 
 
 
