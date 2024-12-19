@@ -8,6 +8,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import numpy as np
 
+# API permettant de connecter nos modèles avec une interface web via Streamlit, Github: chess-elo-prefiction-website
 
 app = FastAPI()
 
@@ -27,6 +28,10 @@ def predict(X):
 
     model= utils.load_model_gcp()
 
+    # ici le modèle connecté ressort 2 scores blanc et noir
+    # après tests, la version la plus performante était d'entrainer 2 modèles
+    # un pour les blancs, un pour les noirs (même modèle mais donnée d'entrainement différente (target))
+    
     white=int(model.predict(X)[0][0])
     black=int(model.predict(X)[0][1])
 

@@ -1,4 +1,4 @@
-from dl_logic import dl_models
+from dl_logic import dl_models_final
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from Utils import utils
@@ -31,13 +31,13 @@ print('\nX,y initialized!')
 
 print('\nInitializing model...')
 # Initializing model
-double_cnn = dl_models.initialize_double_CNN(input_shape=(8, 8, 1), time_per_move_shape=(1,), learning_rate=.1)
+double_cnn = dl_models_final.initialize_double_CNN(input_shape=(8, 8, 1), time_per_move_shape=(1,), learning_rate=.1)
 
 print('\nModel initialized!')
 
 
 print('\nTraining model...')
-dl_models.train_model(double_cnn, [X_pad, time_pad], y, ckp_filename='nicolas_double_CNN_on_white', epochs=27, validation_split=.2, patience=100)
+dl_models_final.train_model(double_cnn, [X_pad, time_pad], y, ckp_filename='nicolas_double_CNN_on_white', epochs=27, validation_split=.2, patience=100)
 filepath = os.path.join('checkpoint', "nicolas_double_CNN_on_white.model.keras")
 utils.upload_parquet_to_gcp(bucket_name, filepath, 'models/nicolas_double_CNN.model.keras')
 

@@ -1,3 +1,8 @@
+"""
+Inspiration venant d'un travail déjà initialisé par une équipe de recherche: github Ai-Guess-the-elo
+"""
+
+
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
