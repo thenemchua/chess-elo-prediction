@@ -45,7 +45,7 @@ Our baseline model is an LSTM reading the pgn sequences as string format.
 
 Then after transforming the pgn into a list of n matrices - n being the number of moves played in the game - we used a combination of CNN and LSTM.
 
-The model first read the matrices using layers of CNN extracting the spatial information, then the duration between moves is added to the output of the CNN and goes trhough a few layers of LSTM to model the temporal dynamics of the game.
+The model first read the matrices using layers of CNN extracting the spatial information, then the duration between moves is added to the output of the CNN and goes through a few layers of LSTM to model the temporal dynamics of the game.
 
 ### Challenges
 
