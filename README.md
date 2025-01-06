@@ -24,21 +24,38 @@ To train our models we extracted a dataset of games and elo score evaluations of
 
 In total it represents a sample of 1.4M games.
 
-Each game data is a string format data containing: white and black elo scores (our target), pgn (sequence of moves played), type of game, duration between moves, result of the game.
+Each game data is a string format data including: 
+* white and black elo scores (our target)
+* pgn (sequence of moves played)
+* game type
+* duration between moves
+* game result.
 
 ### Preprocessing approach
 
 The preprocessing is divided in 2 parts:
-* extrating a clean pgn sequence from the initial data
-* transforming the pgn sequence into chess board matrices (8x8) - one board per move
+* extrating a clean pgn sequence from the raw data
+* transforming the pgn sequence into chess board matrices (8x8) - each matrix representing a board state after a move.
 
-Following this transformation the data is a list of matrices representing the positions the white and black chess pieces.
+Following this transformation the data is a list of matrices representing the positions of the white and black chess pieces.
 
 ### Models used
 
+Our baseline model is an LSTM reading the pgn sequences as string format.
+
+Then after transforming the pgn into a list of n matrices - n being the number of moves played in the game - we used a combination of CNN and LSTM.
+
+The model first read the matrices using layers of CNN extracting the spatial information, then the duration between moves is added to the output of the CNN and goes trhough a few layers of LSTM to model the temporal dynamics of the game.
+
 ### Challenges
+
+A few challenges were faced in the projetc:
+* size of the dataset - our local machines were not able to handle the full dataset. Virtual Machines (VMs) on Google Cloud Platform (GCP) were used for processing
+* duration of model training - each epoch equired several hours.
 
 ### Conclusion
 
+The model succeeded in predicting diferent white and black elo scores using a single pgn sequence.
 
+The Mean Absolute Error (MAE) was reduced using the CNN/LSTM model and the performance exceeded the initial project goals.
 
